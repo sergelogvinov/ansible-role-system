@@ -1,0 +1,45 @@
+#
+
+Port 22
+Protocol 2
+
+SyslogFacility AUTH
+LogLevel {{ system_sshd_loglevel }}
+
+PermitRootLogin without-password
+
+IgnoreRhosts yes
+HostbasedAuthentication no
+
+PasswordAuthentication no
+PermitEmptyPasswords no
+ChallengeResponseAuthentication yes
+StrictModes yes
+
+UsePAM yes
+
+AllowTcpForwarding {% if system_sshd_tcpforward %}yes{% else %}no{% endif %}
+
+X11Forwarding no
+UseDNS no
+
+HostKey /etc/ssh/ssh_host_rsa_key
+#HostKey /etc/ssh/ssh_host_dsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+Subsystem sftp {{ system_sshd_sftp_path }}
+
+# AcceptEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
+# AcceptEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
+# AcceptEnv LC_IDENTIFICATION LC_ALL
+{% if system_sshd_acceptenv %}
+AcceptEnv {{ system_sshd_acceptenv }}
+{% endif %}
+
+ClientAliveInterval 120
+ClientAliveCountMax 2
+
+{% if system_sshd_ciphers %}
+Ciphers {{ system_sshd_ciphers }}
+{% endif %}

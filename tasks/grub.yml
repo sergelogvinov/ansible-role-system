@@ -1,0 +1,25 @@
+---
+
+- name: Update grub default
+  template:
+    src: grub/ubuntu.j2
+    dest: /etc/default/grub
+  notify: Update-grub
+  when: grub_cmdline != '' and ansible_distribution == "Ubuntu"
+  become: yes
+
+- name: Update grub default
+  template:
+    src: grub/debian.j2
+    dest: /etc/default/grub
+  notify: Update-grub
+  when: grub_cmdline != '' and ansible_distribution == "Debian"
+  become: yes
+
+- name: Update grub default
+  template:
+    src: grub/redhat.j2
+    dest: /etc/default/grub
+  notify: Update-grub
+  when: grub_cmdline != '' and ansible_os_family == "RedHat"
+  become: yes

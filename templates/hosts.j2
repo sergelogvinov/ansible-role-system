@@ -1,0 +1,25 @@
+#
+# IPv4
+127.0.0.1 localhost.localdomain localhost
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+
+# Custom hosts
+{% for host in system_network_hosts %}{% set names = host.name.split(' ') %}
+{{ host.ip.ljust(16) }} {{ names[0].ljust(32) }}{{ ' ' + names[1] if names[1] is defined else '' }}
+{% endfor %}
+{% if system_network_hosts_inventory_group and system_network_hosts_inventory_group != '' %}
+
+# Ansible group {{ system_network_hosts_inventory_group }}
+{% for host in groups[system_network_hosts_inventory_group]|default([])|sort %}
+{% if hostvars[host]['ansible_host'] is defined %}
+{{ hostvars[host]['ansible_host'].ljust(16) }} {{ host }}
+{% endif %}
+{% endfor %}
+{% endif %}

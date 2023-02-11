@@ -1,0 +1,42 @@
+---
+
+grub_cmdline: ''
+# grub_cmdline: 'nomodeset consoleblank=0'
+# grub_cmdline: 'cgroup_enable=memory swapaccount=1'
+
+system_packages:
+  - vlan
+  - locales
+  - sudo
+  - tcpdump
+  - vim
+  - htop
+  - iftop
+  - iotop
+  - sysstat
+  - cpufrequtils
+
+system_apt_auto_upgrade: false
+
+system_sshd_acceptenv: ~
+system_sshd_tcpforward: false
+system_sshd_loglevel: INFO
+
+system_network: false
+system_network_pin: false
+system_network_dns: "{{ ansible_dns['nameservers']|default(['1.1.1.1','8.8.8.8']) }}"
+system_network_local_dns: false
+system_network_search_dns: true
+system_network_custom_configs: true
+
+system_network_dummy_ip: ~
+system_network_dummy_mask: 255.255.255.255
+
+system_network_hosts_inventory_group: ~
+system_network_hosts: []
+  # - { ip: 127.0.0.1, name: test }
+
+system_selinux: false
+
+system_sysctl: []
+system_cpufrequtils_governor: performance

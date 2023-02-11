@@ -1,0 +1,26 @@
+---
+
+- apt:
+    name: unattended-upgrades
+    state: present
+    install_recommends: no
+  become: yes
+  when: system_apt_auto_upgrade|bool
+
+- name: Apt auto-upgrade default
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  become: yes
+  when: system_apt_auto_upgrade|bool
+  with_items:
+    - { src: 'apt_auto_upgrades.j2',        dest: '/etc/apt/apt.conf.d/20auto-upgrades' }
+    - { src: 'apt_unattended_upgrades.j2',  dest: '/etc/apt/apt.conf.d/90unattended-upgrades' }
+
+- name: Disable Unattended Upgrades Shutdown service
+  become: yes
+  service:
+    name: unattended-upgrades
+    state: stopped
+    enabled: no
+  when: system_apt_auto_upgrade|bool
