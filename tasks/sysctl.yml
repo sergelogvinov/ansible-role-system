@@ -7,8 +7,14 @@
     state: present
     reload: yes
   with_items:
-    - { name: net.core.somaxconn,           value: 65535 }
-    - { name: net.core.netdev_max_backlog,  value: 4096 }
+    - { name: net.core.somaxconn,             value: 65535  }
+    - { name: net.core.netdev_max_backlog,    value: 4096   }
+
+    # IPVS connection timeout issue
+    - { name: net.ipv4.tcp_keepalive_time,    value: 600   }
+    - { name: net.ipv4.tcp_keepalive_intvl,   value: 30    }
+
+    - { name: fs.inotify.max_user_instances,  value: 4096  }
   become: yes
   ignore_errors: yes
 
@@ -32,12 +38,6 @@
     - { name: net.ipv4.udp_wmem_min,          value: 16384 }
     - { name: net.ipv4.tcp_max_tw_buckets,    value: 32768 }
 
-    # IPVS connection timeout issue
-    - { name: net.ipv4.tcp_keepalive_time,    value: 600   }
-    - { name: net.ipv4.tcp_keepalive_intvl,   value: 30    }
-
-    - { name: fs.inotify.max_user_instances,  value: 4096  }
-
   when: not (ansible_virtualization_role is defined and ansible_virtualization_role == "guest"
              and ansible_virtualization_type == "lxc")
   ignore_errors: yes
@@ -59,4 +59,5 @@
   template:
     src: cpufrequtils.j2
     dest: /etc/default/cpufrequtils
+  when: not (ansible_virtualization_role is defined and ansible_virtualization_role != "host")
   become: yes

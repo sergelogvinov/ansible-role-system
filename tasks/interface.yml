@@ -38,32 +38,13 @@
   when: ansible_os_family == "Debian" and system_network_pin and ansible_service_mgr == 'systemd'
   become: yes
 
-# - name: uninstall package
-#   apt:
-#     name: 'resolvconf'
-#     state: absent
-#   become: yes
-
-# - name: Ensure resolvconf folder exist
-#   file:
-#     path: "{{ item }}"
-#     state: directory
-#     mode: "0755"
-#   when: ansible_os_family == "Debian"
-#   with_items:
-#     - /etc/resolvconf
-#     - /etc/resolvconf/resolv.conf.d
-#   become: yes
-
 - name: configure resolv
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
   when: item.when|bool
   with_items:
-    # - { src: resolv.conf.d.tail.j2,       dest: /etc/resolvconf/resolv.conf.d/tail, when: "{{ ansible_os_family == 'Debian' }}" }
     - { src: resolv.conf.j2,              dest: /etc/resolv.conf,                   when: "{{ ansible_os_family == 'Debian' }}" }
-    # - { src: resolvconf.default.j2,       dest: /etc/default/resolvconf,            when: "{{ ansible_os_family == 'Debian' }}" }
     - { src: hosts.j2,                    dest: /etc/hosts,                         when: "{{ system_network_hosts | length > 0 }}" }
   become: yes
   tags: ['hosts']
