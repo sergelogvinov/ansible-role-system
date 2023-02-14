@@ -1,8 +1,8 @@
 ---
 
-grub_cmdline: ''
-# grub_cmdline: 'nomodeset consoleblank=0'
-# grub_cmdline: 'cgroup_enable=memory swapaccount=1'
+system_grub_cmdline: ''
+# system_grub_cmdline: 'nomodeset consoleblank=0'
+# system_grub_cmdline: 'cgroup_enable=memory swapaccount=1'
 
 system_packages:
   - vlan
