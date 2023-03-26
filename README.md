@@ -1,5 +1,6 @@
-# ansible-role-system
-Basic preparation for the operation system.
+# Ansible role system
+
+Basic preparation the operation system.
 
 ## Install
 
@@ -18,6 +19,14 @@ server-1          ansible_host=1.2.3.1
 
 ```yaml
 # hosts/server-1.yaml
+
+system_cpufrequtils_governor: schedutil
+# For proxmox server
+system_packages:
+  - tcpdump
+  - htop
+  - iftop
+  - cpufrequtils
 
 system_apt_auto_upgrade: true
 system_sysctl:
