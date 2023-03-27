@@ -14,7 +14,6 @@ system_packages:
   - iftop
   - iotop
   - sysstat
-  - cpufrequtils
 
 system_apt_auto_upgrade: false
 
@@ -39,4 +38,4 @@ system_network_hosts: []
 system_selinux: false
 
 system_sysctl: []
-system_cpufrequtils_governor: performance
+system_cpufrequtils_governor: ~ # performance

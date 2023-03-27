@@ -75,5 +75,8 @@
   when: ansible_virtualization_role is defined and
         not (ansible_virtualization_role == "guest" and ansible_virtualization_type == "lxc")
 
+- import_tasks: cpufrequtils.yml
+  when: system_cpufrequtils_governor
+
 - import_tasks: interface.yml
   when: system_network|bool
