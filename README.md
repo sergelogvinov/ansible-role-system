@@ -26,7 +26,6 @@ system_packages:
   - tcpdump
   - htop
   - iftop
-  - cpufrequtils
 
 system_apt_auto_upgrade: true
 system_sysctl:

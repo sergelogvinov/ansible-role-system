@@ -78,5 +78,5 @@
 - import_tasks: cpufrequtils.yml
   when: system_cpufrequtils_governor
 
+- import_tasks: resolv.yml
 - import_tasks: interface.yml
-  when: system_network|bool

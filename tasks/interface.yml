@@ -1,16 +1,16 @@
 ---
 
-- name: Set Hostname with hostname command
-  hostname: name="{{ server_hostname|default(inventory_hostname) }}"
-  when: not (ansible_virtualization_role == "guest" and ansible_virtualization_type == "lxc")
-  ignore_errors: yes
-  become: yes
+# - name: Set Hostname with hostname command
+#   hostname: name="{{ server_hostname|default(inventory_hostname) }}"
+#   when: not (ansible_virtualization_role == "guest" and ansible_virtualization_type == "lxc")
+#   ignore_errors: yes
+#   become: yes
 
 - name: replace network config
   template:
     src: interfaces.j2
     dest: /etc/network/interfaces
-  when: ansible_os_family == "Debian"
+  when: system_network|bool and ansible_os_family == "Debian"
   become: yes
 
 - name: Ensure folder exist
@@ -37,17 +37,6 @@
     dest: /etc/systemd/network/10-persistent-net-eth0.link
   when: ansible_os_family == "Debian" and system_network_pin and ansible_service_mgr == 'systemd'
   become: yes
-
-- name: configure resolv
-  template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-  when: item.when|bool
-  with_items:
-    - { src: resolv.conf.j2,              dest: /etc/resolv.conf,                   when: "{{ ansible_os_family == 'Debian' }}" }
-    - { src: hosts.j2,                    dest: /etc/hosts,                         when: "{{ system_network_hosts | length > 0 }}" }
-  become: yes
-  tags: ['hosts']
 
 - name: configure dummy interface
   template:
