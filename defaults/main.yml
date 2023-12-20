@@ -24,6 +24,16 @@ system_sshd_loglevel: INFO
 system_network: false
 system_network_pin: false
 system_network_dns: "{{ ansible_dns['nameservers']|default(['1.1.1.1','8.8.8.8']) }}"
+
+system_network_interface: interfaces.j2
+# system_network_interface: interfaces-proxmox.j2
+# system_network_ipv6:
+#   address: 2:1:0::/64
+#   gateway: 2:1:0::1
+#   floatip: "{{ '2:1:0::/64' | ansible.utils.ipsubnet(64,0) | ansible.utils.ipsubnet(80,-1) | ansible.utils.ipmath('1091') }}"
+# system_network_ipv4:
+#   address: 192.168.0.32/28
+
 system_network_local_dns: false
 system_network_search_dns: true
 system_network_custom_configs: true

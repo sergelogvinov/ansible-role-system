@@ -11,9 +11,9 @@ ff02::2 ip6-allrouters
 ff02::3 ip6-allhosts
 
 # Custom hosts
-{% for host in system_network_hosts %}{% set names = host.name.split(' ') %}
+{% for host in system_network_hosts %}{% if host.ip != '' %}{% set names = host.name.split(' ') %}
 {{ host.ip.ljust(16) }} {{ names[0].ljust(32) }}{{ ' ' + names[1] if names[1] is defined else '' }}
-{% endfor %}
+{% endif %}{% endfor %}
 {% if system_network_hosts_inventory_group and system_network_hosts_inventory_group != '' %}
 
 # Ansible group {{ system_network_hosts_inventory_group }}

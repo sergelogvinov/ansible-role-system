@@ -8,7 +8,7 @@
 
 - name: replace network config
   template:
-    src: interfaces.j2
+    src: "{{ system_network_interface }}"
     dest: /etc/network/interfaces
   when: system_network|bool and ansible_os_family == "Debian"
   become: yes
