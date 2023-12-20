@@ -1,0 +1,28 @@
+---
+
+- name: packages
+  apt:
+    name: postfix
+  become: yes
+
+- name: configure /etc/aliases
+  template:
+    src: aliases.j2
+    dest: /etc/aliases
+    owner: root
+    group: root
+    mode: "0644"
+  become: yes
+  notify: Update-aliases
+
+- name: replace postfix config with custom one
+  template:
+    src: postfix_main.cf.j2
+    dest: /etc/postfix/main.cf
+  register: postfix
+  become: yes
+
+- name: restart postfix
+  service: name=postfix state=restarted
+  become: yes
+  when: postfix.changed|bool

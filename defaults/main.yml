@@ -47,5 +47,7 @@ system_network_hosts: []
 
 system_selinux: false
 
+system_postfix: false
+
 system_sysctl: []
 system_cpufrequtils_governor: ~ # performance

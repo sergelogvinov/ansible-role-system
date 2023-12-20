@@ -3,3 +3,7 @@
 - name: Update-grub
   shell: "{{ update_grub_cmd }}"
   become: yes
+
+- name: Update-aliases
+  shell: newaliases
+  become: yes
