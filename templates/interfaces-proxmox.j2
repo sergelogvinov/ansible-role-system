@@ -65,7 +65,11 @@ iface vmbr0 inet static
 
 {% endif %}
 iface vmbr0 inet6 static
+{% if system_network_ipv6['address'].endswith('/64') %}
         address {{ system_network_ipv6['address'] | ansible.utils.ipmath('100') }}/64
+{% else %}
+        address {{ system_network_ipv6['address'] }}
+{% endif %}
 {% if not system_network_ipv4['address'] %}
         bridge-ports none
         bridge-stp off
