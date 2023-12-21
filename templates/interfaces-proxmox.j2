@@ -46,7 +46,11 @@ iface {{ ansible_default_ipv4['alias'] }} inet static
 {% if system_network_ipv6 %}
 
 iface {{ 'eth0' if system_network_pin else ansible_default_ipv4['alias'] }} inet6 static
+{% if system_network_ipv6['address'].endswith('/64') %}
         address {{ system_network_ipv6['address'] | ansible.utils.ipmath('296') }}/128
+{% else %}
+        address {{ system_network_ipv6['address'] | ansible.utils.ipmath(0) }}/128
+{% endif %}
         gateway {{ system_network_ipv6['gateway'] }}
 {% if ansible_default_ipv4['mtu'] != 1500 %}
         mtu {{ ansible_default_ipv4['mtu'] }}
