@@ -30,7 +30,7 @@
 - name: uninstall package
   become: yes
   apt:
-    name: ['ntp','openntpd']
+    name: ['ntp','openntpd','ntpsec']
     state: absent
   when: ansible_os_family == "Debian" and ansible_service_mgr == 'systemd'
 

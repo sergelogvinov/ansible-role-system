@@ -10,6 +10,15 @@
 
 auto lo
 iface lo inet loopback
+{% if system_network_local_dns %}
+        dns-nameservers 127.0.0.1 {{ ansible_default_ipv4['address'] }}{% for ns in system_network_dns -%}
+        {% if ('127.0.0.1' not in ns) and (ansible_default_ipv4['address'] not in ns) %} {{ ns }}{% endif %}{% endfor %}
+{% elif system_network_dns != '' %}
+        dns-nameservers{% for ns in system_network_dns %} {{ ns }}{% endfor %}
+{% endif %}
+{% if system_network_search_dns and ansible_dns['search'] is defined and ansible_dns['search']|length > 0 %}
+        dns-search{% for search in ansible_dns['search'] %} {{ search }}{% endfor %}
+{% endif %}
 {% if system_network_ipv6 and system_network_ipv6['floatip'] %}
         up ip -6 addr add {{ system_network_ipv6['floatip'] }} dev $IFACE
 {% endif %}
@@ -17,22 +26,39 @@ iface lo inet loopback
 {% for interface in ansible_interfaces|sort %}
 {% set iface = ansible_facts[interface] %}
 {% if iface.type is defined and iface.type == "bonding" and (iface['active'] | default(false)) %}
+
 {% for slave in iface.slaves %}
 auto {{ slave }}
 iface {{ slave }} inet manual
+        bond-master {{ interface }}
 {% endfor %}
 
 auto {{ interface }}
-iface {{ interface }} inet manual
+iface {{ interface }} inet {{ 'static' if iface.ipv4 is defined else 'manual' }}
         bond-slaves {{ iface.slaves | join(' ') }}
         bond-miimon {{ iface.miimon | default(100) }}
         bond-mode {{ iface.mode | default('802.3ad') }}
         bond-lacp-rate {{ iface.lacp_rate | default('fast') }}
+        {% if iface.mode == "802.3ad" -%}
+        bond-xmit-hash-policy layer3+4
+        {% endif -%}
         bond-min-links 1
-        bond-downdelay 100
-        bond-updelay 100
+        bond-downdelay 200
+        bond-updelay 200
         hwaddress {{ iface.macaddress }}
+        {% if iface.ipv4 is defined -%}
+        address {{ iface.ipv4.address }}/{{ iface.ipv4.prefix }}
+        {% if ansible_default_ipv4.alias == interface -%}
+        gateway {{ ansible_default_ipv4.gateway }}
+        {% endif -%}
+        {% endif -%}
         mtu {{ iface.mtu | default(1500) }}
+        {% if iface.features['tx_tcp_segmentation'] == "off" -%}
+        post-up /sbin/ethtool -K {{ interface }} tso off
+        {% endif -%}
+        {% if iface.features['tx_checksumming'] == "off" -%}
+        post-up /sbin/ethtool -K {{ interface }} tx off
+        {% endif -%}
 {% endif %}
 {% endfor %}
 
@@ -44,16 +70,7 @@ iface {{ 'eth0' if system_network_pin else ansible_default_ipv4['alias'] }} inet
 {% if ansible_default_ipv4['mtu'] != 1500 %}
         mtu {{ ansible_default_ipv4['mtu'] }}
 {% endif %}
-{% if system_network_local_dns %}
-        dns-nameservers 127.0.0.1 {{ ansible_default_ipv4['address'] }}{% for ns in system_network_dns -%}
-        {% if ('127.0.0.1' not in ns) and (ansible_default_ipv4['address'] not in ns) %} {{ ns }}{% endif %}{% endfor %}
-{% elif system_network_dns != '' %}
-        dns-nameservers{% for ns in system_network_dns %} {{ ns }}{% endfor %}
-
 {% endif %}
-{% if system_network_search_dns and ansible_dns['search'] is defined and ansible_dns['search']|length > 0 %}
-        dns-search{% for search in ansible_dns['search'] %} {{ search }}{% endfor %}
-{% endif %}{% endif %}
 {% if system_network_pin and ansible_default_ipv4['alias'] != 'eth0' %}
 
 # temporary define interface
@@ -81,6 +98,7 @@ iface {{ 'eth0' if system_network_pin else ansible_default_ipv4['alias'] }} inet
 {% if system_network_ipv6['floatip'] %}
         up ip -6 neigh add proxy {{ system_network_ipv6['floatip'] }} dev $IFACE
 {% endif %}
+{% endif %}
 
 auto vmbr0
 {% if system_network_ipv4['address'] %}
@@ -89,8 +107,9 @@ iface vmbr0 inet static
         bridge-ports none
         bridge-stp off
         bridge-fd 0
-
 {% endif %}
+
+{% if system_network_ipv6 %}
 iface vmbr0 inet6 static
 {% if system_network_ipv6['address'].endswith('/64') %}
         address {{ system_network_ipv6['address'] | ansible.utils.ipmath('100') }}/64
