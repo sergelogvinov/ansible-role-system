@@ -27,15 +27,16 @@ iface lo inet loopback
 {% set iface = ansible_facts[interface] %}
 {% if iface.type is defined and iface.type == "bonding" and (iface['active'] | default(false)) %}
 
-{% for slave in iface.slaves %}
+{% for slave in iface.slaves|sort %}{% if ansible_service_mgr != 'systemd' %}
 auto {{ slave }}
 iface {{ slave }} inet manual
         bond-master {{ interface }}
-{% endfor %}
+{% endif %}{% endfor %}
 
-auto {{ interface }}
+{{ 'allow-hotplug' if ansible_service_mgr == 'systemd' else 'auto' }} {{ interface }}
 iface {{ interface }} inet {{ 'static' if iface.ipv4 is defined else 'manual' }}
-        bond-slaves {{ iface.slaves | join(' ') }}
+        {% if ansible_service_mgr != 'systemd' -%}
+        bond-slaves {{ iface.slaves | sort | join(' ') }}
         bond-miimon {{ iface.miimon | default(100) }}
         bond-mode {{ iface.mode | default('802.3ad') }}
         bond-lacp-rate {{ iface.lacp_rate | default('fast') }}
@@ -46,6 +47,9 @@ iface {{ interface }} inet {{ 'static' if iface.ipv4 is defined else 'manual' }}
         bond-downdelay 200
         bond-updelay 200
         hwaddress {{ iface.macaddress }}
+        {% else -%}
+        # Bonding was configured via systemd-networkd
+        {% endif -%}
         {% if iface.ipv4 is defined -%}
         address {{ iface.ipv4.address }}/{{ iface.ipv4.prefix }}
         {% if ansible_default_ipv4.alias == interface -%}
@@ -53,11 +57,13 @@ iface {{ interface }} inet {{ 'static' if iface.ipv4 is defined else 'manual' }}
         {% endif -%}
         {% endif -%}
         mtu {{ iface.mtu | default(1500) }}
+        {% if iface.features is defined -%}
         {% if iface.features['tx_tcp_segmentation'] == "off" -%}
         post-up /sbin/ethtool -K {{ interface }} tso off
         {% endif -%}
         {% if iface.features['tx_checksumming'] == "off" -%}
         post-up /sbin/ethtool -K {{ interface }} tx off
+        {% endif -%}
         {% endif -%}
 {% endif %}
 {% endfor %}
@@ -71,7 +77,7 @@ iface {{ 'eth0' if system_network_pin else ansible_default_ipv4['alias'] }} inet
         mtu {{ ansible_default_ipv4['mtu'] }}
 {% endif %}
 {% endif %}
-{% if system_network_pin and ansible_default_ipv4['alias'] != 'eth0' %}
+{% if system_network_pin and ansible_default_ipv4['alias'] != 'eth0' and ansible_default_ipv4['type'] != 'bonding' %}
 
 # temporary define interface
 allow-hotplug {{ ansible_default_ipv4['alias'] }}

@@ -1,0 +1,7 @@
+{% for interface in ansible_interfaces|sort %}
+{% set iface = ansible_facts[interface] %}
+{% if iface.type is defined and iface.type == "ether" %}
+# Pin network interface {{ iface.pciid }}/{{ iface.perm_macaddress }} -> {{ interface }}
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="{{ iface.perm_macaddress }}", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="{{ interface }}"
+{% endif %}
+{% endfor %}

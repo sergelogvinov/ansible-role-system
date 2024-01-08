@@ -1,0 +1,9 @@
+{% set iface = ansible_facts[item] %}
+[Match]
+Type=ether
+{% for slave in iface.slaves|sort %}
+PermanentMACAddress={{ ansible_facts[slave].perm_macaddress }}
+{% endfor %}
+
+[Network]
+Bond={{ item }}

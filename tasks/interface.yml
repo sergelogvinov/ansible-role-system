@@ -13,6 +13,26 @@
   when: system_network|bool and ansible_os_family == "Debian"
   become: yes
 
+- name: systemd-networkd bonding netdev
+  template:
+    src: systemd.netdev.j2
+    dest: /etc/systemd/network/25-{{ item }}.netdev
+    owner: systemd-network
+    mode: 0640
+  when: system_network|bool and ansible_service_mgr == 'systemd' and ansible_facts[item].type == 'bonding'
+  with_items: "{{ ansible_interfaces }}"
+  become: yes
+
+- name: systemd-networkd bonding network
+  template:
+    src: systemd.network.j2
+    dest: /etc/systemd/network/25-{{ item }}.network
+    owner: systemd-network
+    mode: 0640
+  when: system_network|bool and ansible_service_mgr == 'systemd' and ansible_facts[item].type == 'bonding'
+  with_items: "{{ ansible_interfaces }}"
+  become: yes
+
 - name: Ensure folder exist
   file:
     path: "{{ item }}"
@@ -35,7 +55,14 @@
   template:
     src: interfaces-persistent-net.j2
     dest: /etc/systemd/network/10-persistent-net-eth0.link
-  when: ansible_os_family == "Debian" and system_network_pin and ansible_service_mgr == 'systemd'
+  when: ansible_os_family == "Debian" and system_network_pin and ansible_service_mgr == 'systemd' and ansible_default_ipv4.type == 'ether'
+  become: yes
+
+- name: pin network interface name (udev)
+  template:
+    src: interfaces-persistent-net-udev.j2
+    dest: /etc/udev/rules.d/70-persistent-net.rules
+  when: system_network_pin|bool
   become: yes
 
 - name: configure dummy interface
@@ -45,4 +72,14 @@
   when: ansible_os_family == "Debian" and system_network_dummy_ip and system_network_dummy_ip != ''
   with_items:
     - { src: dummy.conf.j2,       dest: /etc/modprobe.d/dummy.conf }
+  become: yes
+
+- name: enable systemd-networkd bonding network
+  service:
+    name: "{{ item.name }}"
+    enabled: "{{ item.enabled }}"
+  when: system_network|bool and ansible_service_mgr == 'systemd'
+  with_items:
+    - { name: systemd-networkd, enabled: true }
+    - { name: systemd-networkd-wait-online, enabled: false }
   become: yes

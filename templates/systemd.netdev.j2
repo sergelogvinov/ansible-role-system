@@ -1,0 +1,16 @@
+{% set iface = ansible_facts[item] %}
+[NetDev]
+Name={{ item }}
+Description=LAG/Bond to a switch
+Kind=bond
+MTUBytes={{ iface.mtu | default(1500) }}
+MACAddress={{ iface.macaddress }}
+
+[Bond]
+Mode={{ iface.mode | default('802.3ad') }}
+MIIMonitorSec={{ iface.miimon | default(100) }}ms
+LACPTransmitRate={{ iface.lacp_rate | default(fast) }}
+TransmitHashPolicy={{ 'layer3+4' if iface.mode == "802.3ad" else 'layer2' }}
+UpDelaySec=2s
+DownDelaySec=2s
+MinLinks=1
