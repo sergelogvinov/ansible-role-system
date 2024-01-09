@@ -8,7 +8,7 @@ MACAddress={{ iface.macaddress }}
 
 [Bond]
 Mode={{ iface.mode | default('802.3ad') }}
-MIIMonitorSec={{ iface.miimon | default(100) }}ms
+MIIMonitorSec={{ [(iface.miimon|int), 100] | max | default(100) }}ms
 LACPTransmitRate={{ iface.lacp_rate | default(fast) }}
 TransmitHashPolicy={{ 'layer3+4' if iface.mode == "802.3ad" else 'layer2' }}
 UpDelaySec=2s
