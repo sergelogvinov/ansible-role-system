@@ -10,53 +10,58 @@
   template:
     src: "{{ system_network_interface }}"
     dest: /etc/network/interfaces
-  when: system_network|bool and ansible_os_family == "Debian"
-  become: yes
-
-- name: systemd-networkd bonding netdev
-  template:
-    src: systemd.netdev.j2
-    dest: /etc/systemd/network/25-{{ item }}.netdev
-    owner: systemd-network
-    mode: 0640
-  when: system_network|bool and ansible_service_mgr == 'systemd' and ansible_facts[item].type == 'bonding'
-  with_items: "{{ ansible_interfaces }}"
-  become: yes
-
-- name: systemd-networkd bonding network
-  template:
-    src: systemd.network.j2
-    dest: /etc/systemd/network/25-{{ item }}.network
-    owner: systemd-network
-    mode: 0640
-  when: system_network|bool and ansible_service_mgr == 'systemd' and ansible_facts[item].type == 'bonding'
-  with_items: "{{ ansible_interfaces }}"
-  become: yes
-
-- name: Ensure folder exist
-  file:
-    path: "{{ item }}"
-    state: directory
-    mode: "0755"
   when: ansible_os_family == "Debian"
-  with_items:
-    - /etc/systemd/network
-    - /etc/systemd/system/networking.service.d
   become: yes
 
-- name: reduce timeout raise network
-  template:
-    src: interfaces-timeout.conf.j2
-    dest: /etc/systemd/system/networking.service.d/interfaces-timeout.conf
-  when: ansible_os_family == "Debian" and ansible_service_mgr == 'systemd'
+- name: Systemd-networkd
   become: yes
+  when: ansible_service_mgr == 'systemd' or system_service_mgr == 'systemd'
+  block:
+    - name: systemd-networkd bonding netdev
+      template:
+        src: systemd.netdev.j2
+        dest: /etc/systemd/network/25-{{ item }}.netdev
+        owner: systemd-network
+        mode: 0640
+      when: ansible_facts[item].type == 'bonding'
+      with_items: "{{ ansible_interfaces }}"
 
-- name: pin network interface name
-  template:
-    src: interfaces-persistent-net.j2
-    dest: /etc/systemd/network/10-persistent-net-eth0.link
-  when: ansible_os_family == "Debian" and system_network_pin and ansible_service_mgr == 'systemd' and ansible_default_ipv4.type == 'ether'
-  become: yes
+    - name: systemd-networkd bonding network
+      template:
+        src: systemd.network.j2
+        dest: /etc/systemd/network/25-{{ item }}.network
+        owner: systemd-network
+        mode: 0640
+      when: ansible_facts[item].type == 'bonding'
+      with_items: "{{ ansible_interfaces }}"
+
+    - name: Ensure folder exist
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      with_items:
+        - /etc/systemd/network
+        - /etc/systemd/system/networking.service.d
+
+    - name: reduce timeout raise network
+      template:
+        src: interfaces-timeout.conf.j2
+        dest: /etc/systemd/system/networking.service.d/interfaces-timeout.conf
+
+    - name: pin network interface name
+      template:
+        src: interfaces-persistent-net.j2
+        dest: /etc/systemd/network/10-persistent-net-eth0.link
+      when: system_network_pin and ansible_default_ipv4.type == 'ether'
+
+    - name: enable systemd-networkd bonding network
+      systemd:
+        name: "{{ item.name }}"
+        enabled: "{{ item.enabled }}"
+      with_items:
+        - { name: systemd-networkd, enabled: true }
+        - { name: systemd-networkd-wait-online, enabled: false }
 
 - name: pin network interface name (udev)
   template:
@@ -72,14 +77,4 @@
   when: ansible_os_family == "Debian" and system_network_dummy_ip and system_network_dummy_ip != ''
   with_items:
     - { src: dummy.conf.j2,       dest: /etc/modprobe.d/dummy.conf }
-  become: yes
-
-- name: enable systemd-networkd bonding network
-  service:
-    name: "{{ item.name }}"
-    enabled: "{{ item.enabled }}"
-  when: system_network|bool and ansible_service_mgr == 'systemd'
-  with_items:
-    - { name: systemd-networkd, enabled: true }
-    - { name: systemd-networkd-wait-online, enabled: false }
   become: yes

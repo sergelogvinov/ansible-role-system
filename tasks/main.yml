@@ -83,3 +83,4 @@
 
 - import_tasks: resolv.yml
 - import_tasks: interface.yml
+  when: system_network|bool

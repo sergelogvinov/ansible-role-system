@@ -5,6 +5,9 @@ system_sshd_service_name: sshd
 system_sshd_ciphers: ~
 
 update_grub_cmd: /usr/sbin/grub2-mkconfig
+
+system_service_mgr: systemd
+
 system_packages:
   - tcpdump
   - vim

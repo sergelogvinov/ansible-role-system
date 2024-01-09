@@ -5,3 +5,5 @@ system_sshd_service_name: ssh
 system_sshd_ciphers: ~
 
 update_grub_cmd: update-grub
+
+system_service_mgr: systemd

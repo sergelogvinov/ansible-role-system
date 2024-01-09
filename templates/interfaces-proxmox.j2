@@ -107,14 +107,14 @@ iface {{ 'eth0' if system_network_pin else ansible_default_ipv4['alias'] }} inet
 {% endif %}
 
 auto vmbr0
-{% if system_network_ipv4['address'] %}
+{% if system_network_ipv4['address'] is defined %}
 iface vmbr0 inet static
         address {{ system_network_ipv4['address'] }}
         bridge-ports none
         bridge-stp off
         bridge-fd 0
-{% endif %}
 
+{% endif %}
 {% if system_network_ipv6 %}
 iface vmbr0 inet6 static
 {% if system_network_ipv6['address'].endswith('/64') %}
