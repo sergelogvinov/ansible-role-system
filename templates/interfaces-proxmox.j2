@@ -27,15 +27,15 @@ iface lo inet loopback
 {% set iface = ansible_facts[interface] %}
 {% if iface.type is defined and iface.type == "bonding" and (iface['active'] | default(false)) %}
 
-{% for slave in iface.slaves|sort %}{% if ansible_service_mgr != 'systemd' %}
+{% if system_service_mgr != 'systemd' %}{% for slave in iface.slaves|sort %}
 auto {{ slave }}
 iface {{ slave }} inet manual
         bond-master {{ interface }}
-{% endif %}{% endfor %}
+{% endfor %}{% endif %}
 
-{{ 'allow-hotplug' if ansible_service_mgr == 'systemd' else 'auto' }} {{ interface }}
+{{ 'allow-hotplug' if system_service_mgr == 'systemd' else 'auto' }} {{ interface }}
 iface {{ interface }} inet {{ 'static' if iface.ipv4 is defined else 'manual' }}
-        {% if ansible_service_mgr != 'systemd' -%}
+        {% if system_service_mgr != 'systemd' -%}
         bond-slaves {{ iface.slaves | sort | join(' ') }}
         bond-miimon {{ iface.miimon | default(100) }}
         bond-mode {{ iface.mode | default('802.3ad') }}

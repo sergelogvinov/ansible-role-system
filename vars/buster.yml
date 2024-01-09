@@ -6,4 +6,4 @@ system_sshd_ciphers: ~
 
 update_grub_cmd: update-grub
 
-system_service_mgr: ~
+system_service_mgr: "{{ ansible_service_mgr}}"

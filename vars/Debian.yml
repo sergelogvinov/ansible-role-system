@@ -6,4 +6,4 @@ system_sshd_ciphers: aes128-ctr,aes192-ctr,aes256-ctr,arcfour256,arcfour128
 
 update_grub_cmd: update-grub
 
-system_service_mgr: systemd
+system_service_mgr: "{{ ansible_service_mgr}}"

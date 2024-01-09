@@ -15,7 +15,7 @@
 
 - name: Systemd-networkd
   become: yes
-  when: ansible_service_mgr == 'systemd' or system_service_mgr == 'systemd'
+  when: system_service_mgr == 'systemd'
   block:
     - name: systemd-networkd bonding netdev
       template:
