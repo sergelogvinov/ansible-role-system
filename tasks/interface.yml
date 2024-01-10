@@ -49,11 +49,11 @@
         src: interfaces-timeout.conf.j2
         dest: /etc/systemd/system/networking.service.d/interfaces-timeout.conf
 
-    - name: pin network interface name
-      template:
-        src: interfaces-persistent-net.j2
-        dest: /etc/systemd/network/10-persistent-net-eth0.link
-      when: system_network_pin and ansible_default_ipv4.type == 'ether'
+    # - name: pin network interface name
+    #   template:
+    #     src: interfaces-persistent-net.j2
+    #     dest: /etc/systemd/network/10-persistent-net-eth0.link
+    #   when: system_network_pin and ansible_default_ipv4.type == 'ether'
 
     - name: enable systemd-networkd bonding network
       systemd:
