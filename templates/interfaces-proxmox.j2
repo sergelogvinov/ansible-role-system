@@ -25,7 +25,7 @@ iface lo inet loopback
 
 {% for interface in ansible_interfaces|sort %}
 {% set iface = ansible_facts[interface] %}
-{% if iface.type is defined and iface.type == "bonding" and (iface['active'] | default(false)) %}
+{% if iface.type is defined and iface.type == "bonding" and (iface.slaves|length > 0) %}
 
 {% if system_service_mgr != 'systemd' %}{% for slave in iface.slaves|sort %}
 auto {{ slave }}
