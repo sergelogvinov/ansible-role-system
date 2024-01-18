@@ -3,6 +3,7 @@
 system_grub_cmdline: ''
 # system_grub_cmdline: 'nomodeset consoleblank=0'
 # system_grub_cmdline: 'cgroup_enable=memory swapaccount=1'
+system_grub_cmdline_raw: ''
 
 system_packages:
   - vlan

@@ -37,3 +37,6 @@ GRUB_DISABLE_OS_PROBER=true
 
 # Uncomment to get a beep at grub start
 #GRUB_INIT_TUNE="480 440 1"
+{% if system_grub_cmdline_raw %}
+{{ system_grub_cmdline_raw }}
+{% endif %}
