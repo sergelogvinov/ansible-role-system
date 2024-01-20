@@ -5,5 +5,8 @@ Type=ether
 PermanentMACAddress={{ ansible_facts[slave].perm_macaddress }}
 {% endfor %}
 
+[Link]
+MTUBytes={{ iface.mtu | default(1500) }}
+
 [Network]
 Bond={{ item }}

@@ -1,0 +1,16 @@
+{% set iface = ansible_facts[item] %}
+[Match]
+Type=ether
+Driver={{ iface.module }}
+{% if system_network_sriov_pf is defined %}
+Name={% for pf in system_network_sriov_pf|sort %}{{ pf }} {% endfor %}
+{% endif %}
+
+[Link]
+MTUBytes={{ iface.mtu | default(1500) }}
+
+[SR-IOV]
+VirtualFunction=0
+MACSpoofCheck=no
+Trust=yes
+LinkState=yes

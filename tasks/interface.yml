@@ -32,8 +32,31 @@
         dest: /etc/systemd/network/25-{{ item }}.network
         owner: systemd-network
         mode: 0640
-      when: ansible_facts[item].type == 'bonding'
+      when: ansible_facts[item].type == 'bonding' and ansible_facts[item].slaves|length > 0
       with_items: "{{ ansible_interfaces }}"
+
+    # - name: systemd-networkd sr-iov pf
+    #   stat:
+    #     path: "/sys/bus/pci/devices/{{ ansible_facts[item].pciid }}/sriov_numvfs"
+    #   when: ansible_facts[item].type == 'ether' # and ansible_facts[item].module in system_network_sriov
+    #   with_items: "{{ ansible_interfaces }}"
+    #   register: probe
+
+    # - name: set fact system_network_sriov_pf
+    #   set_fact:
+    #     system_network_sriov_pf: "{{ system_network_sriov_pf|default({}) | combine( {item.item: item.stat.exists} ) }}"
+    #   when: item.stat is defined and item.stat.exists
+    #   with_items:
+    #     - "{{ probe.results }}"
+
+    # - name: systemd-networkd sr-iov vf
+    #   template:
+    #     src: systemd.network-vf.j2
+    #     dest: /etc/systemd/network/25-{{ item }}.network
+    #     owner: systemd-network
+    #     mode: 0640
+    #   when: ansible_facts[item].type == 'ether' and ansible_facts[item].module in system_network_sriov and ansible_facts[item].phc_index == 0
+    #   with_items: "{{ ansible_interfaces }}"
 
     - name: Ensure folder exist
       file:
