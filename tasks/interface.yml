@@ -1,11 +1,5 @@
 ---
 
-# - name: Set Hostname with hostname command
-#   hostname: name="{{ server_hostname|default(inventory_hostname) }}"
-#   when: not (ansible_virtualization_role == "guest" and ansible_virtualization_type == "lxc")
-#   ignore_errors: yes
-#   become: yes
-
 - name: replace network config
   template:
     src: "{{ system_network_interface }}"

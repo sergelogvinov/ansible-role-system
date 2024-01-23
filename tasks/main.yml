@@ -76,10 +76,13 @@
         not (ansible_virtualization_role == "guest" and ansible_virtualization_type == "lxc")
 
 - import_tasks: cpufrequtils.yml
-  when: system_cpufrequtils_governor|bool
+  when: system_cpufrequtils_governor is defined and system_cpufrequtils_governor
 
 - import_tasks: postfix.yml
   when: system_postfix|bool
+
+- import_tasks: hostname.yml
+  when: system_network|bool
 
 - import_tasks: resolv.yml
 - import_tasks: interface.yml
