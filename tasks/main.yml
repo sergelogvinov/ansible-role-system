@@ -6,6 +6,12 @@
     - "../vars/{{ ansible_os_family }}.yml"
     - "../vars/empty.yml"
 
+- name: set root password
+  user:
+    name: root
+    password: "{{ system_root_password }}"
+  when: system_root_password is defined and system_root_password
+
 - name: update apt cache
   apt:
     update_cache: yes

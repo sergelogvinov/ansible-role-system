@@ -18,6 +18,9 @@ system_packages:
 
 system_apt_auto_upgrade: false
 
+# mkpasswd -m sha512crypt
+system_root_password: ~
+
 system_sshd_acceptenv: ~
 system_sshd_tcpforward: false
 system_sshd_loglevel: INFO
