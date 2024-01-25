@@ -6,17 +6,20 @@
     dest: /etc/ssh/sshd_config
   become: yes
   register: sshd
+  tags: ['system','sshd']
 
 - name: restart openssh
   service: name={{ system_sshd_service_name }} state=restarted
   become: yes
   when: sshd.changed|bool
+  tags: ['system','sshd']
 
 - name: sudo conf
   template:
     src: sudoers.j2
     dest: /etc/sudoers
   become: yes
+  tags: ['system']
 
 - name: disable selinux
   lineinfile:
@@ -25,6 +28,7 @@
     line: 'SELINUX=disabled'
   become: yes
   when: ansible_os_family == "RedHat" and not system_selinux
+  tags: ['system']
 
 # Systemd journal
 - name: replace default journal config
@@ -33,3 +37,4 @@
     dest: /etc/systemd/journald.conf
   become: yes
   when: ansible_service_mgr == 'systemd'
+  tags: ['system']

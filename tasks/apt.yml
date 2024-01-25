@@ -6,6 +6,7 @@
     install_recommends: no
   become: yes
   when: system_apt_auto_upgrade|bool
+  tags: ['system']
 
 - name: Apt auto-upgrade default
   template:
@@ -16,6 +17,7 @@
   with_items:
     - { src: 'apt_auto_upgrades.j2',        dest: '/etc/apt/apt.conf.d/20auto-upgrades' }
     - { src: 'apt_unattended_upgrades.j2',  dest: '/etc/apt/apt.conf.d/90unattended-upgrades' }
+  tags: ['system']
 
 - name: Disable Unattended Upgrades Shutdown service
   become: yes
@@ -24,3 +26,4 @@
     state: stopped
     enabled: no
   when: system_apt_auto_upgrade|bool
+  tags: ['system']

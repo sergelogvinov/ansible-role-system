@@ -7,6 +7,7 @@
   notify: Update-grub
   when: system_grub_cmdline != '' and ansible_distribution == "Ubuntu"
   become: yes
+  tags: ['system']
 
 - name: Update grub default
   template:
@@ -15,6 +16,7 @@
   notify: Update-grub
   when: system_grub_cmdline != '' and ansible_distribution == "Debian"
   become: yes
+  tags: ['system']
 
 - name: Update grub default
   template:
@@ -23,3 +25,4 @@
   notify: Update-grub
   when: system_grub_cmdline != '' and ansible_os_family == "RedHat"
   become: yes
+  tags: ['system']

@@ -4,6 +4,7 @@
   apt:
     name: postfix
   become: yes
+  tags: ['system','postfix']
 
 - name: configure /etc/aliases
   template:
@@ -14,6 +15,7 @@
     mode: "0644"
   become: yes
   notify: Update-aliases
+  tags: ['system','postfix']
 
 - name: replace postfix config with custom one
   template:
@@ -21,8 +23,10 @@
     dest: /etc/postfix/main.cf
   register: postfix
   become: yes
+  tags: ['system','postfix']
 
 - name: restart postfix
   service: name=postfix state=restarted
   become: yes
   when: postfix.changed|bool
+  tags: ['system','postfix']

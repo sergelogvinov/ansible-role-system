@@ -5,3 +5,4 @@
   yum:
     name: ['elrepo-release','epel-release']
   when: ansible_os_family == "RedHat"
+  tags: ['system']

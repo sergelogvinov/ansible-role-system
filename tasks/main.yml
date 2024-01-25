@@ -5,12 +5,14 @@
     - "../vars/{{ ansible_distribution_release }}.yml"
     - "../vars/{{ ansible_os_family }}.yml"
     - "../vars/empty.yml"
+  tags: ['system','network']
 
 - name: set root password
   user:
     name: root
     password: "{{ system_root_password }}"
   when: system_root_password is defined and system_root_password
+  tags: ['system']
 
 - name: update apt cache
   apt:
@@ -18,18 +20,21 @@
     cache_valid_time: 86400
   when: ansible_os_family == "Debian"
   become: yes
+  tags: ['system']
 
 - name: packages (debian)
   apt:
     name: '{{ system_packages }}'
   become: yes
   when: ansible_os_family == "Debian"
+  tags: ['system']
 
 - name: packages (centos)
   yum:
     name: '{{ system_packages }}'
   become: yes
   when: ansible_os_family == "RedHat"
+  tags: ['system']
 
 - file:
     path: '{{ item.path }}'
@@ -40,6 +45,7 @@
     - { path: /root/bin,    mode: '0755' }
     - { path: /root/.ssh,   mode: '0700' }
   become: yes
+  tags: ['system']
 
 ### Need fix (ansible bugs)
 - name: set
@@ -50,16 +56,19 @@
   register: change_locale
   when: ansible_os_family == "Debian"
   become: yes
+  tags: ['system']
 
 - name: Create the locale
   become: yes
   command: /usr/sbin/locale-gen en_US.UTF-8
   when: ansible_os_family == "Debian" and change_locale.changed
+  tags: ['system']
 
 - name: Set the locale by default
   become: yes
   command: /usr/sbin/update-locale LANG=en_US.UTF-8 --reset
   when: ansible_os_family == "Debian" and change_locale.changed
+  tags: ['system']
 ###
 
 - file:
@@ -67,6 +76,7 @@
     mode: 0755
   when: ansible_os_family == "RedHat"
   become: yes
+  tags: ['system']
 
 - import_tasks: time.yml
 - import_tasks: apt.yml

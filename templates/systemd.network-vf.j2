@@ -2,15 +2,28 @@
 [Match]
 Type=ether
 Driver={{ iface.module }}
-{% if system_network_sriov_pf is defined %}
-Name={% for pf in system_network_sriov_pf|sort %}{{ pf }} {% endfor %}
+{% if iface.perm_macaddress is defined or iface.macaddress is defined %}
+PermanentMACAddress={{ iface.perm_macaddress|default(iface.macaddress) }}
+{% else %}
+Name={{ item }}
 {% endif %}
 
 [Link]
 MTUBytes={{ iface.mtu | default(1500) }}
 
+{% set bonds = [] %}
+{% for bond in ansible_interfaces|sort if ansible_facts[bond].type is defined and ansible_facts[bond].type == "bonding" %}
+{% if (ansible_facts[bond].slaves|length > 0) and item in ansible_facts[bond].slaves %}{{ bonds.append(interface) }}
+[Network]
+Bond={{ bond }}
+{% endif %}
+{% endfor %}
+
+{% for vf in ansible_interfaces if vf.startswith((item|regex_replace('(.*)np[\d]$', '\\1')) + 'v') and ansible_facts[vf].module in system_network_sriov_vf %}
 [SR-IOV]
-VirtualFunction=0
+VirtualFunction={{ loop.index - 1 }}
 MACSpoofCheck=no
 Trust=yes
-LinkState=yes
+LinkState={{ 'auto' if bonds|length > 0 else 'yes' }}
+
+{% endfor %}

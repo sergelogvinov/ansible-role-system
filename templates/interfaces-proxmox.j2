@@ -111,7 +111,8 @@ auto vmbr0
 {% if system_network_ipv4['address'] is defined %}
 iface vmbr0 inet static
         address {{ system_network_ipv4['address'] }}
-        bridge-ports none
+        mtu {{ ansible_facts['vmbr0']['mtu'] | default(1500) }}
+        bridge-ports {{ 'none' if system_network_ipv4.ports is undefined else system_network_ipv4.ports }}
         bridge-stp off
         bridge-fd 0
 
@@ -124,7 +125,8 @@ iface vmbr0 inet6 static
         address {{ system_network_ipv6['address'] }}
 {% endif %}
 {% if not system_network_ipv4['address'] %}
-        bridge-ports none
+        mtu {{ ansible_facts['vmbr0']['mtu'] | default(1500) }}
+        bridge-ports {{ 'none' if system_network_ipv4.ports is undefined else system_network_ipv4.ports }}
         bridge-stp off
         bridge-fd 0
 {% endif %}

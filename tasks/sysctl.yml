@@ -17,6 +17,7 @@
     - { name: fs.inotify.max_user_instances,  value: 4096  }
   become: yes
   ignore_errors: yes
+  tags: ['system','sysctl']
 
 - name: adjust sysctl
   sysctl:
@@ -45,6 +46,7 @@
              and ansible_virtualization_type == "lxc")
   ignore_errors: yes
   become: yes
+  tags: ['system','sysctl']
 
 - name: adjust sysctl custom rules
   sysctl:
@@ -57,3 +59,4 @@
   when: system_sysctl|length > 0
   ignore_errors: yes
   become: yes
+  tags: ['system','sysctl']
