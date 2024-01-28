@@ -109,7 +109,7 @@ iface {{ 'eth0' if system_network_pin else ansible_default_ipv4['alias'] }} inet
 {% else %}
         address {{ system_network_ipv6['address'] | ansible.utils.ipmath(0) }}/128
 {% endif %}
-        gateway {{ system_network_ipv6['gateway'] }}
+        gateway {{ system_network_ipv6['gateway']|default(ansible_default_ipv6['gateway']) }}
 {% if ansible_default_ipv4['mtu'] != 1500 %}
         mtu {{ ansible_default_ipv4['mtu'] }}
 {% endif %}
@@ -136,7 +136,7 @@ iface vmbr0 inet6 static
 {% else %}
         address {{ system_network_ipv6['address'] }}
 {% endif %}
-{% if not system_network_ipv4['address'] %}
+{% if not (system_network_ipv4['address'] is defined and system_network_ipv4['address']) %}
         mtu {{ ansible_facts['vmbr0']['mtu'] | default(1500) }}
         bridge-ports {{ 'none' if system_network_ipv4.ports is undefined else system_network_ipv4.ports }}
         bridge-stp off
