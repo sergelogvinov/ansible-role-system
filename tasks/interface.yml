@@ -11,10 +11,12 @@
 - name: discovery network sr-iov pf
   stat:
     path: "/sys/bus/pci/devices/{{ ansible_facts[item].pciid }}/sriov_numvfs"
-  when: item != 'ovs-system' and ansible_facts[item].type == 'ether' and (ansible_facts[item].module|default('') in system_network_sriov)
+  when: item != 'ovs-system' and ansible_facts[item] is defined
+    and ansible_facts[item].type == 'ether' and ansible_facts[item].pciid is defined
+    and (ansible_facts[item].module|default('') in system_network_sriov)
   with_items: "{{ ansible_interfaces }}"
   register: probe
-  tags: ['system','network']
+  tags: ['system','network','udev']
 
 - name: set system_network_sriov_pf list
   set_fact:
@@ -22,7 +24,7 @@
   when: item.stat is defined and item.stat.exists
   with_items:
     - "{{ probe.results }}"
-  tags: ['system','network']
+  tags: ['system','network','udev']
 
 - name: Systemd-networkd
   become: yes
@@ -35,7 +37,7 @@
         dest: /etc/systemd/network/25-{{ item }}.netdev
         owner: systemd-network
         mode: 0640
-      when: item != 'ovs-system' and ansible_facts[item].type == 'bonding'
+      when: item != 'ovs-system' and ansible_facts[item] is defined and ansible_facts[item].type == 'bonding'
       with_items: "{{ ansible_interfaces }}"
 
     - name: systemd-networkd sr-iov pf
@@ -44,7 +46,8 @@
         dest: /etc/systemd/network/30-{{ item }}.network
         owner: systemd-network
         mode: 0640
-      when: item != 'ovs-system' and ansible_facts[item].type == 'ether' and (ansible_facts[item].module|default('') in system_network_sriov)
+      when: item != 'ovs-system' and ansible_facts[item] is defined
+        and ansible_facts[item].type == 'ether' and (ansible_facts[item].module|default('') in system_network_sriov)
         and (system_network_sriov_pf[item]|default(false)) # ansible_facts[item].phc_index == 0
       with_items: "{{ ansible_interfaces }}"
 
@@ -92,7 +95,7 @@
     dest: /etc/udev/rules.d/70-persistent-net.rules
   when: system_network_pin|bool
   become: yes
-  tags: ['system','network']
+  tags: ['system','network','udev']
 
 - name: configure dummy interface
   template:

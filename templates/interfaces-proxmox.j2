@@ -65,6 +65,18 @@ iface {{ interface }} inet {{ 'static' if iface.ipv4 is defined else 'manual' }}
         post-up /sbin/ethtool -K {{ interface }} tx off
         {% endif -%}
         {% endif -%}
+{% if iface.ipv6 is defined and iface.ipv6|length > 1 %}
+
+iface {{ interface }} inet6 static
+{% if iface.ipv6[0].prefix|int <= 64 %}
+        address {{ iface.ipv6[0].address }}/{{ iface.ipv6[0].prefix }}
+{% else %}
+        address {{ iface.ipv6[0].address | ansible.utils.ipmath(0) }}/128
+{% endif %}
+{% if ansible_default_ipv6.address is defined and ansible_default_ipv6.address == iface.ipv6[0].address %}
+        gateway {{ ansible_default_ipv6['gateway'] }}
+{% endif %}
+{% endif %}
 {% endif %}
 {% endfor %}
 
@@ -106,7 +118,7 @@ iface {{ 'eth0' if system_network_pin else ansible_default_ipv4['alias'] }} inet
 {% endif %}
 {% endif %}
 
-{% if system_network_ipv4['address'] is defined or system_network_ipv6['address'] is defined %}
+{% if system_network_ipv4['address'] is defined or system_network_ipv6['address'] is defined -%}
 auto vmbr0
 {% if system_network_ipv4['address'] is defined %}
 iface vmbr0 inet static
@@ -117,7 +129,7 @@ iface vmbr0 inet static
         bridge-fd 0
 
 {% endif %}
-{% if system_network_ipv6 %}
+{% if system_network_ipv6 -%}
 iface vmbr0 inet6 static
 {% if system_network_ipv6['address'].endswith('/64') %}
         address {{ system_network_ipv6['address'] | ansible.utils.ipmath('100') }}/64
@@ -131,6 +143,21 @@ iface vmbr0 inet6 static
         bridge-fd 0
 {% endif %}
 {% endif %}
+{% else %}
+{% for interface in ansible_interfaces|sort if ansible_facts[interface].type is defined and ansible_facts[interface].type == "bridge" %}
+{% set iface = ansible_facts[interface] %}
+auto {{ interface }}
+iface {{ interface }} {{ 'inet6' if iface.ipv6 is defined else 'inet' }} static
+{% if iface.ipv6 is defined %}
+        address {{ iface.ipv6[0].address }}/{{ iface.ipv6[0].prefix }}
+{% elif iface.ipv4 is defined %}
+        address {{ iface.ipv4['address'] }}/{{ iface.ipv4['prefix'] }}
+{% endif %}
+        mtu {{ iface.mtu | default(1500) }}
+        bridge-ports {{ 'none' if iface.interfaces|length == 0 else iface.interfaces|join(' ') }}
+        bridge-stp {{ 'on' if iface.stp else 'off' }}
+        bridge-fd 0
+{% endfor %}
 {% endif %}
 
 #
