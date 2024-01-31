@@ -19,7 +19,7 @@ iface lo inet loopback
 {% if system_network_search_dns and ansible_dns['search'] is defined and ansible_dns['search']|length > 0 %}
         dns-search {{ ansible_dns['search'] | join(' ') }}
 {% endif %}
-{% if system_network_ipv6 and system_network_ipv6['floatip'] %}
+{% if system_network_ipv6 and system_network_ipv6['floatip'] is defined %}
         up ip -6 addr add {{ system_network_ipv6['floatip'] }} dev $IFACE
 {% endif %}
 
@@ -113,7 +113,7 @@ iface {{ 'eth0' if system_network_pin else ansible_default_ipv4['alias'] }} inet
 {% if ansible_default_ipv4['mtu'] != 1500 %}
         mtu {{ ansible_default_ipv4['mtu'] }}
 {% endif %}
-{% if system_network_ipv6['floatip'] %}
+{% if system_network_ipv6['floatip'] is defined and system_network_ipv6['floatip'] %}
         up ip -6 neigh add proxy {{ system_network_ipv6['floatip'] }} dev $IFACE
 {% endif %}
 {% endif %}

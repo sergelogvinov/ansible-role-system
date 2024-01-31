@@ -41,9 +41,10 @@
     state: directory
     mode: '{{ item.mode }}'
   with_items:
-    - { path: /etc/vim,     mode: '0755' }
-    - { path: /root/bin,    mode: '0755' }
-    - { path: /root/.ssh,   mode: '0700' }
+    - { path: /etc/vim,             mode: '0755' }
+    - { path: /etc/ansible/facts.d, mode: '0700' }
+    - { path: /root/bin,            mode: '0750' }
+    - { path: /root/.ssh,           mode: '0700' }
   become: yes
   tags: ['system']
 
