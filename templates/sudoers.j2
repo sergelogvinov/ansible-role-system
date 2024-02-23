@@ -6,13 +6,13 @@
 #
 # See the man page for details on how to write a sudoers file.
 #
-Defaults    env_reset
-Defaults    mail_badpass
-Defaults    secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-Defaults    env_keep = "LANG LC_ADDRESS LC_CTYPE LC_COLLATE LC_IDENTIFICATION LC_MEASUREMENT LC_MESSAGES LC_MONETARY LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE LC_TIME LC_ALL LANGUAGE LINGUAS XDG_SESSION_COOKIE HOME"
-Defaults    env_keep+=SSH_AUTH_SOCK
+Defaults       env_reset
+Defaults       mail_badpass
+Defaults       secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Defaults       env_keep = "LANG LC_ADDRESS LC_CTYPE LC_COLLATE LC_IDENTIFICATION LC_MEASUREMENT LC_MESSAGES LC_MONETARY LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE LC_TIME LC_ALL LANGUAGE LINGUAS XDG_SESSION_COOKIE HOME"
+Defaults       env_keep+=SSH_AUTH_SOCK
 
-root            ALL=(ALL) NOPASSWD:ALL
-%wheel          ALL=(ALL)          ALL
+root           ALL=(ALL) NOPASSWD:ALL
+%wheel         ALL=(ALL)          ALL
 
 @includedir /etc/sudoers.d

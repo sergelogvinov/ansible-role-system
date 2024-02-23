@@ -51,15 +51,16 @@
         and (system_network_sriov_pf[item]|default(false)) # ansible_facts[item].phc_index == 0
       with_items: "{{ ansible_interfaces }}"
 
-    # - name: systemd-networkd bonding network
-    #   template:
-    #     src: systemd.network.j2
-    #     dest: /etc/systemd/network/25-{{ item }}.network
-    #     owner: systemd-network
-    #     mode: 0640
-    #   when: item != 'ovs-system' and ansible_facts[item].type == 'bonding' and ansible_facts[item].slaves|length > 0
-    #     and not(ansible_facts[item].module|default('') in system_network_sriov)
-    #   with_items: "{{ ansible_interfaces }}"
+    - name: systemd-networkd bonding network
+      template:
+        src: systemd.network.j2
+        dest: /etc/systemd/network/25-{{ item }}.network
+        owner: systemd-network
+        mode: 0640
+      when: item != 'ovs-system' and ansible_facts[item] is defined
+        and ansible_facts[item].type == 'bonding' and ansible_facts[item].slaves|length > 0
+        and not(ansible_facts[item].module|default('') in system_network_sriov)
+      with_items: "{{ ansible_interfaces }}"
 
     - name: Ensure folder exist
       file:
