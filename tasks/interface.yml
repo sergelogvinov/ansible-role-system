@@ -1,13 +1,5 @@
 ---
 
-- name: replace network config
-  template:
-    src: "{{ system_network_interface }}"
-    dest: /etc/network/interfaces
-  when: ansible_os_family == "Debian"
-  become: yes
-  tags: ['system','network']
-
 - name: discovery network sr-iov pf
   stat:
     path: "/sys/bus/pci/devices/{{ ansible_facts[item].pciid }}/sriov_numvfs"
@@ -26,6 +18,22 @@
     - "{{ probe.results }}"
   tags: ['system','network','udev']
 
+- name: pin network interface name (udev)
+  template:
+    src: interfaces-persistent-net-udev.j2
+    dest: /etc/udev/rules.d/70-persistent-net.rules
+  when: system_network_pin|bool
+  become: yes
+  tags: ['system','network','udev']
+
+- name: replace network config
+  template:
+    src: "{{ system_network_interface }}"
+    dest: /etc/network/interfaces
+  when: ansible_os_family == "Debian"
+  become: yes
+  tags: ['system','network']
+
 - name: Systemd-networkd
   become: yes
   when: system_service_mgr == 'systemd'
@@ -40,17 +48,6 @@
       when: item != 'ovs-system' and ansible_facts[item] is defined and ansible_facts[item].type == 'bonding'
       with_items: "{{ ansible_interfaces }}"
 
-    - name: systemd-networkd sr-iov pf
-      template:
-        src: systemd.network-vf.j2
-        dest: /etc/systemd/network/30-{{ item }}.network
-        owner: systemd-network
-        mode: 0640
-      when: item != 'ovs-system' and ansible_facts[item] is defined
-        and ansible_facts[item].type == 'ether' and (ansible_facts[item].module|default('') in system_network_sriov)
-        and (system_network_sriov_pf[item]|default(false)) # ansible_facts[item].phc_index == 0
-      with_items: "{{ ansible_interfaces }}"
-
     - name: systemd-networkd bonding network
       template:
         src: systemd.network.j2
@@ -60,6 +57,17 @@
       when: item != 'ovs-system' and ansible_facts[item] is defined
         and ansible_facts[item].type == 'bonding' and ansible_facts[item].slaves|length > 0
         and not(ansible_facts[item].module|default('') in system_network_sriov)
+      with_items: "{{ ansible_interfaces }}"
+
+    - name: systemd-networkd sr-iov pf
+      template:
+        src: systemd.network-vf.j2
+        dest: /etc/systemd/network/30-{{ item }}.network
+        owner: systemd-network
+        mode: 0640
+      when: item != 'ovs-system' and ansible_facts[item] is defined
+        and ansible_facts[item].type == 'ether' and (ansible_facts[item].module|default('') in system_network_sriov)
+        and (system_network_sriov_pf[item]|default(false)) # ansible_facts[item].phc_index == 0
       with_items: "{{ ansible_interfaces }}"
 
     - name: Ensure folder exist
@@ -89,14 +97,6 @@
       with_items:
         - { name: systemd-networkd, enabled: true }
         - { name: systemd-networkd-wait-online, enabled: false }
-
-- name: pin network interface name (udev)
-  template:
-    src: interfaces-persistent-net-udev.j2
-    dest: /etc/udev/rules.d/70-persistent-net.rules
-  when: system_network_pin|bool
-  become: yes
-  tags: ['system','network','udev']
 
 - name: configure dummy interface
   template:
