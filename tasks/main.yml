@@ -12,6 +12,7 @@
     name: root
     password: "{{ system_root_password }}"
   when: system_root_password is defined and system_root_password
+  become: yes
   tags: ['system']
 
 - name: update apt cache
