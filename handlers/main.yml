@@ -7,3 +7,7 @@
 - name: Update-aliases
   shell: newaliases
   become: yes
+
+- name: systemctl reload
+  shell: systemctl daemon-reload
+  become: yes

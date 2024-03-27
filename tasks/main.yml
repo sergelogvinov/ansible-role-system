@@ -50,6 +50,7 @@
   tags: ['system']
 
 ### Need fix (ansible bugs)
+
 - name: set
   locale_gen:
     name: en_US.UTF-8
@@ -71,14 +72,8 @@
   command: /usr/sbin/update-locale LANG=en_US.UTF-8 --reset
   when: ansible_os_family == "Debian" and change_locale.changed
   tags: ['system']
-###
 
-- file:
-    path: /etc/rc.d/rc.local
-    mode: 0755
-  when: ansible_os_family == "RedHat"
-  become: yes
-  tags: ['system']
+###
 
 - import_tasks: time.yml
 - import_tasks: apt.yml
@@ -92,6 +87,9 @@
 - import_tasks: grub.yml
   when: ansible_virtualization_role is defined and
         not (ansible_virtualization_role == "guest" and ansible_virtualization_type == "lxc")
+
+- import_tasks: numa.yml
+  when: system_numa_hugepages|length > 0
 
 - import_tasks: cpufrequtils.yml
   when: system_cpufrequtils_governor is defined and system_cpufrequtils_governor

@@ -59,3 +59,7 @@ system_postfix: false
 
 system_sysctl: []
 system_cpufrequtils_governor: ~ # performance
+
+# numastat -cm
+system_numa_hugepages: []
+  # - { node: 0, hugepagesz: 1024, count: 2 }

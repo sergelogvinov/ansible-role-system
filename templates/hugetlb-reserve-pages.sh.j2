@@ -1,0 +1,17 @@
+#!/bin/sh
+
+nodes_path=/sys/devices/system/node/
+if [ ! -d $nodes_path ]; then
+	echo "ERROR: $nodes_path does not exist"
+	exit 1
+fi
+
+reserve_pages_1g()
+{
+	echo $2 > $nodes_path/$1/hugepages/hugepages-1048576kB/nr_hugepages
+}
+
+# reserve_pages_1g node number_of_pages
+{% for numa in system_numa_hugepages if numa.hugepagesz == 1024 %}
+reserve_pages_1g node{{ numa.node }} {{ numa.count }}
+{% endfor %}

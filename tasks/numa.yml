@@ -1,0 +1,31 @@
+---
+
+- name: hugetlb reserve script
+  become: yes
+  template:
+    src: hugetlb-reserve-pages.sh.j2
+    dest: /usr/lib/systemd/hugetlb-reserve-pages.sh
+    mode: 0755
+  when: ansible_service_mgr == 'systemd'
+  tags: ['system']
+
+- name: create service file
+  template:
+    src: hugetlb-reserve-pages.service.j2
+    dest: /etc/systemd/system/hugetlb-reserve-pages.service
+  become: yes
+  when: ansible_service_mgr == 'systemd'
+  notify: systemctl reload
+  tags: ['system']
+
+- meta: flush_handlers
+  tags: ['system']
+
+- name: ensure hugetlb reserve is started
+  become: yes
+  service:
+    name: hugetlb-reserve-pages
+    state: started
+    enabled: yes
+  when: ansible_service_mgr == 'systemd'
+  tags: ['system']
