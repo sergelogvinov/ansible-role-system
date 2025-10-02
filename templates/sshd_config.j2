@@ -28,6 +28,7 @@ UseDNS no
 HostKey /etc/ssh/ssh_host_rsa_key
 HostKey /etc/ssh/ssh_host_ecdsa_key
 HostKey /etc/ssh/ssh_host_ed25519_key
+AuthorizedKeysFile /etc/ssh/authorized_keys/%u .ssh/authorized_keys
 
 Subsystem sftp {{ system_sshd_sftp_path }}
 
@@ -44,3 +45,5 @@ ClientAliveCountMax 2
 {% if system_sshd_ciphers %}
 Ciphers {{ system_sshd_ciphers }}
 {% endif %}
+
+Include /etc/ssh/sshd_config.d/*.conf
