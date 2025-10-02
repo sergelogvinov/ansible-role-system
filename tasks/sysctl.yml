@@ -1,6 +1,7 @@
 ---
 
 - name: adjust sysctl for all servers
+  become: true
   sysctl:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
@@ -15,11 +16,11 @@
     - { name: net.ipv4.tcp_keepalive_intvl,   value: 30    }
 
     - { name: fs.inotify.max_user_instances,  value: 4096  }
-  become: yes
-  ignore_errors: yes
+  ignore_errors: true
   tags: ['system','sysctl']
 
 - name: adjust sysctl
+  become: true
   sysctl:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
@@ -44,11 +45,11 @@
 
   when: not (ansible_virtualization_role is defined and ansible_virtualization_role == "guest"
              and ansible_virtualization_type == "lxc")
-  ignore_errors: yes
-  become: yes
+  ignore_errors: true
   tags: ['system','sysctl']
 
 - name: adjust sysctl custom rules
+  become: true
   sysctl:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
@@ -57,6 +58,5 @@
   with_items:
     - "{{ system_sysctl }}"
   when: system_sysctl|length > 0
-  ignore_errors: yes
-  become: yes
+  ignore_errors: true
   tags: ['system','sysctl']

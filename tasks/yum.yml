@@ -1,7 +1,7 @@
 ---
 
 - name: Add epel repository
-  become: yes
+  become: true
   yum:
     name: ['elrepo-release','epel-release']
   when: ansible_os_family == "RedHat"

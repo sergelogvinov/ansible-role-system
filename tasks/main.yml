@@ -8,36 +8,38 @@
   tags: ['system','network']
 
 - name: set root password
+  become: true
   user:
     name: root
     password: "{{ system_root_password }}"
-  when: system_root_password is defined and system_root_password
-  become: yes
+  when: system_root_password is defined and system_root_password != ""
   tags: ['system']
 
 - name: update apt cache
+  become: true
   apt:
-    update_cache: yes
+    update_cache: true
     cache_valid_time: 86400
   when: ansible_os_family == "Debian"
-  become: yes
   tags: ['system']
 
 - name: packages (debian)
+  become: true
   apt:
     name: '{{ system_packages }}'
-  become: yes
   when: ansible_os_family == "Debian"
   tags: ['system']
 
 - name: packages (centos)
+  become: true
   yum:
     name: '{{ system_packages }}'
-  become: yes
   when: ansible_os_family == "RedHat"
   tags: ['system']
 
-- file:
+- name: default directory
+  become: true
+  file:
     path: '{{ item.path }}'
     state: directory
     mode: '{{ item.mode }}'
@@ -46,29 +48,28 @@
     - { path: /etc/ansible/facts.d, mode: '0700' }
     - { path: /root/bin,            mode: '0750' }
     - { path: /root/.ssh,           mode: '0700' }
-  become: yes
   tags: ['system']
 
 ### Need fix (ansible bugs)
 
 - name: set
+  become: true
   locale_gen:
     name: en_US.UTF-8
     state: present
-  ignore_errors: yes
+  ignore_errors: true
   register: change_locale
   when: ansible_os_family == "Debian"
-  become: yes
   tags: ['system']
 
 - name: Create the locale
-  become: yes
+  become: true
   command: /usr/sbin/locale-gen en_US.UTF-8
   when: ansible_os_family == "Debian" and change_locale.changed
   tags: ['system']
 
 - name: Set the locale by default
-  become: yes
+  become: true
   command: /usr/sbin/update-locale LANG=en_US.UTF-8 --reset
   when: ansible_os_family == "Debian" and change_locale.changed
   tags: ['system']
@@ -92,7 +93,7 @@
   when: system_numa_hugepages|length > 0
 
 - import_tasks: cpufrequtils.yml
-  when: system_cpufrequtils_governor is defined and system_cpufrequtils_governor
+  when: system_cpufrequtils_governor is defined and system_cpufrequtils_governor != ""
 
 - import_tasks: postfix.yml
   when: system_postfix|bool

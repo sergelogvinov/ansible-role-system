@@ -1,15 +1,15 @@
 ---
 
 - name: package cpufrequtils
+  become: true
   apt:
     name: cpufrequtils
-  become: yes
   tags: ['system']
 
 - name: cpufrequtils
+  become: true
   template:
     src: cpufrequtils.j2
     dest: /etc/default/cpufrequtils
   when: not (ansible_virtualization_role is defined and ansible_virtualization_role != "host")
-  become: yes
   tags: ['system']

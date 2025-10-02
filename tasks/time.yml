@@ -1,8 +1,8 @@
 ---
 
 - name: set default timezone
+  become: true
   file: src=/usr/share/zoneinfo/Etc/UTC dest={{ item }} force=yes state=link
-  become: yes
   with_items:
     - /etc/localtime
   tags: ['system']
@@ -11,29 +11,28 @@
   register: links
   tags: ['system']
 - name: fix /etc/timezone
+  become: true
   file:
     path: /etc/timezone
     state: absent
-  become: yes
   when: links.stat.islnk is defined and links.stat.islnk
   tags: ['system']
 - name: set default timezone
+  become: true
   copy:
     content: "Etc/UTC\n"
     dest: /etc/timezone
-  become: yes
   tags: ['system']
 
-# Install ntp
 - name: packages
+  become: true
   apt:
     name: 'ntp'
-  become: yes
   when: ansible_os_family == "Debian" and ansible_service_mgr != 'systemd'
   tags: ['system']
 
 - name: uninstall package
-  become: yes
+  become: true
   apt:
     name: ['ntp','openntpd','ntpsec']
     state: absent
@@ -41,28 +40,28 @@
   tags: ['system']
 
 - name: replace default ntp config with custom one
+  become: true
   template:
     src: ntp.conf.j2
     dest: /etc/ntp.conf
-  become: yes
   when: ansible_os_family == "Debian" and ansible_service_mgr != 'systemd' and
         not (ansible_virtualization_role == "guest" and ansible_virtualization_type == "lxc")
   tags: ['system']
 
 - name: ntp stop in lxc-container or systems
-  become: yes
+  become: true
   service: name=ntp enabled=no state=stopped
   when: (ansible_virtualization_role is defined and
         ansible_virtualization_role == "guest" and ansible_virtualization_type == "lxc") or
         ansible_service_mgr == 'systemd'
-  ignore_errors: yes
+  ignore_errors: true
   tags: ['system']
 
 # Use systemd
 - name: replace default ntp config with custom one
+  become: true
   template:
     src: timesyncd.conf.j2
     dest: /etc/systemd/timesyncd.conf
-  become: yes
   when: ansible_service_mgr == 'systemd'
   tags: ['system']

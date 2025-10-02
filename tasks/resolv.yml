@@ -1,5 +1,6 @@
 
 - name: configure resolv
+  become: true
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
@@ -7,5 +8,4 @@
   with_items:
     - { src: resolv.conf.j2,              dest: /etc/resolv.conf,                   when: "{{ ansible_os_family == 'Debian' }}" }
     - { src: hosts.j2,                    dest: /etc/hosts,                         when: "{{ system_network_hosts | length > 0 }}" }
-  become: yes
   tags: ['system','hosts']

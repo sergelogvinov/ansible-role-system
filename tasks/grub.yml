@@ -1,28 +1,28 @@
 ---
 
 - name: Update grub default
+  become: true
   template:
     src: grub/ubuntu.j2
     dest: /etc/default/grub
   notify: Update-grub
   when: system_grub_cmdline != '' and ansible_distribution == "Ubuntu"
-  become: yes
   tags: ['system']
 
 - name: Update grub default
+  become: true
   template:
     src: grub/debian.j2
     dest: /etc/default/grub
   notify: Update-grub
   when: system_grub_cmdline != '' and ansible_distribution == "Debian"
-  become: yes
   tags: ['system']
 
 - name: Update grub default
+  become: true
   template:
     src: grub/redhat.j2
     dest: /etc/default/grub
   notify: Update-grub
   when: system_grub_cmdline != '' and ansible_os_family == "RedHat"
-  become: yes
   tags: ['system']

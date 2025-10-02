@@ -1,0 +1,9 @@
+---
+
+system_sshd_sftp_path: /usr/lib/openssh/sftp-server
+system_sshd_service_name: ssh
+system_sshd_ciphers: ~
+
+update_grub_cmd: update-grub
+
+system_service_mgr: "{{ ansible_service_mgr}}"

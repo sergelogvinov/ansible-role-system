@@ -1,32 +1,32 @@
 ---
 
-- name: packages
+- name: postfix packages
+  become: true
   apt:
     name: postfix
-  become: yes
   tags: ['system','postfix']
 
 - name: configure /etc/aliases
+  become: true
   template:
     src: aliases.j2
     dest: /etc/aliases
     owner: root
     group: root
     mode: "0644"
-  become: yes
   notify: Update-aliases
   tags: ['system','postfix']
 
 - name: replace postfix config with custom one
+  become: true
   template:
     src: postfix_main.cf.j2
     dest: /etc/postfix/main.cf
   register: postfix
-  become: yes
   tags: ['system','postfix']
 
 - name: restart postfix
+  become: true
   service: name=postfix state=restarted
-  become: yes
   when: postfix.changed|bool
   tags: ['system','postfix']
