@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/sergelogvinov/ansible-role-system/compare/v0.3.0...v0.3.1) (2025-11-01)
+
+
+### Bug Fixes
+
+* sysctl for trixie ([da83d03](https://github.com/sergelogvinov/ansible-role-system/commit/da83d03e50ca13268fdd1a83a119d1142efc9887))
+
 ## [0.3.0](https://github.com/sergelogvinov/ansible-role-system/compare/v0.2.0...v0.3.0) (2025-11-01)
 
 
