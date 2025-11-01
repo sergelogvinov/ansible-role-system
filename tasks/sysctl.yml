@@ -5,6 +5,7 @@
   sysctl:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
+    sysctl_file: "{{ system_sysctl_file }}"
     state: present
     reload: yes
   with_items:
@@ -24,6 +25,7 @@
   sysctl:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
+    sysctl_file: "{{ system_sysctl_file }}"
     state: present
     reload: yes
   with_items:
@@ -53,6 +55,7 @@
   sysctl:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
+    sysctl_file: "{{ system_sysctl_file }}"
     state: present
     reload: yes
   with_items:

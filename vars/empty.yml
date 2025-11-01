@@ -1,2 +1,5 @@
 ---
 # This file intentionally does not define any variables.
+
+system_sysctl_file: /etc/sysctl.conf
+system_sshd_sftp_path: /usr/lib/openssh/sftp-server
