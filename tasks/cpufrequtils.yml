@@ -3,13 +3,27 @@
 - name: package cpufrequtils
   become: true
   apt:
-    name: cpufrequtils
+    name: "{{ system_cpufrequtils }}"
+  when: system_cpufrequtils != ""
   tags: ['system']
 
-- name: cpufrequtils
+- name: configure cpu governor
   become: true
-  template:
-    src: cpufrequtils.j2
-    dest: /etc/default/cpufrequtils
   when: not (ansible_virtualization_role is defined and ansible_virtualization_role != "host")
   tags: ['system']
+  block:
+    - name: configure cpufrequtils
+      become: true
+      template:
+        src: cpufrequtils.j2
+        dest: /etc/default/cpufrequtils
+      when: system_cpufrequtils == "cpufrequtils"
+      tags: ['system']
+
+    # - name: configure cpupower
+    #   become: true
+    #   template:
+    #     src: cpupower.j2
+    #     dest: /etc/default/cpupower
+    #   when: system_cpufrequtils == "linux-cpupower"
+    #   tags: ['system']

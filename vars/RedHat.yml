@@ -15,3 +15,5 @@ system_packages:
   - iotop
   - htop
   - rsync
+
+system_cpufrequtils: ~
