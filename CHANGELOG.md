@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/sergelogvinov/ansible-role-system/compare/v0.3.1...v0.3.2) (2025-11-03)
+
+
+### Bug Fixes
+
+* default values ([b39b416](https://github.com/sergelogvinov/ansible-role-system/commit/b39b416462915974d9b4bca0638b9484c754eaf3))
+
 ## [0.3.1](https://github.com/sergelogvinov/ansible-role-system/compare/v0.3.0...v0.3.1) (2025-11-01)
 
 
