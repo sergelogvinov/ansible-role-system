@@ -1,6 +1,6 @@
 ---
 
-system_sysctl_file: /etc//etc/sysctl.d/system.conf
+system_sysctl_file: /etc/sysctl.d/system.conf
 
 system_sshd_sftp_path: /usr/lib/openssh/sftp-server
 system_sshd_service_name: ssh

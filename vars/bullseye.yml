@@ -1,5 +1,7 @@
 ---
 
+system_sysctl_file: /etc/sysctl.conf
+
 system_sshd_sftp_path: /usr/lib/openssh/sftp-server
 system_sshd_service_name: ssh
 system_sshd_ciphers: aes128-ctr,aes192-ctr,aes256-ctr
@@ -7,3 +9,5 @@ system_sshd_ciphers: aes128-ctr,aes192-ctr,aes256-ctr
 update_grub_cmd: update-grub
 
 system_service_mgr: systemd
+
+system_cpufrequtils: cpufrequtils
