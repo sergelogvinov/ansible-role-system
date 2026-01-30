@@ -1,8 +1,8 @@
 [Match]
-MACAddress={{ ansible_default_ipv4['macaddress'] }}
+MACAddress={{ ansible_facts['default_ipv4']['macaddress'] }}
 Type=!vlan
-{% if ansible_facts[ansible_default_ipv4['alias']]['module'] != 'virtio_net' %}
-Path=pci-{{ ansible_facts[ansible_default_ipv4['alias']]['pciid'] }}
+{% if ansible_facts[ansible_facts['default_ipv4']['alias']]['module'] != 'virtio_net' %}
+Path=pci-{{ ansible_facts[ansible_facts['default_ipv4']['alias']]['pciid'] }}
 {% endif %}
 
 [Link]

@@ -2,8 +2,8 @@
 
 - include_vars: "{{ item }}"
   with_first_found:
-    - "../vars/{{ ansible_distribution_release }}.yml"
-    - "../vars/{{ ansible_os_family }}.yml"
+    - "../vars/{{ ansible_facts['distribution_release'] }}.yml"
+    - "../vars/{{ ansible_facts['os_family'] }}.yml"
     - "../vars/empty.yml"
   tags: ['system','network']
 
@@ -20,21 +20,21 @@
   apt:
     update_cache: true
     cache_valid_time: 86400
-  when: ansible_os_family == "Debian"
+  when: ansible_facts['os_family'] == "Debian"
   tags: ['system']
 
 - name: packages (debian)
   become: true
   apt:
     name: '{{ system_packages }}'
-  when: ansible_os_family == "Debian"
+  when: ansible_facts['os_family'] == "Debian"
   tags: ['system']
 
 - name: packages (centos)
   become: true
   yum:
     name: '{{ system_packages }}'
-  when: ansible_os_family == "RedHat"
+  when: ansible_facts['os_family'] == "RedHat"
   tags: ['system']
 
 - name: default directory
@@ -60,35 +60,35 @@
     state: present
   ignore_errors: true
   register: change_locale
-  when: ansible_os_family == "Debian"
+  when: ansible_facts['os_family'] == "Debian"
   tags: ['system']
 
 - name: Create the locale
   become: true
   command: /usr/sbin/locale-gen en_US.UTF-8
-  when: ansible_os_family == "Debian" and change_locale.changed
+  when: ansible_facts['os_family'] == "Debian" and change_locale.changed
   tags: ['system']
 
 - name: Set the locale by default
   become: true
   command: /usr/sbin/update-locale LANG=en_US.UTF-8 --reset
-  when: ansible_os_family == "Debian" and change_locale.changed
+  when: ansible_facts['os_family'] == "Debian" and change_locale.changed
   tags: ['system']
 
 ###
 
 - import_tasks: time.yml
 - import_tasks: apt.yml
-  when: ansible_os_family == "Debian"
+  when: ansible_facts['os_family'] == "Debian"
 
 - import_tasks: yum.yml
-  when: ansible_os_family == "RedHat"
+  when: ansible_facts['os_family'] == "RedHat"
 
 - import_tasks: security.yml
 - import_tasks: sysctl.yml
 - import_tasks: grub.yml
-  when: ansible_virtualization_role is defined and
-        not (ansible_virtualization_role == "guest" and ansible_virtualization_type == "lxc")
+  when: ansible_facts['virtualization_role'] is defined and
+        not (ansible_facts['virtualization_role'] == "guest" and ansible_facts['virtualization_type'] == "lxc")
 
 - import_tasks: numa.yml
   when: system_numa_hugepages|length > 0

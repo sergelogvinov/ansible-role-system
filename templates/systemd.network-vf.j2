@@ -12,7 +12,7 @@ Name={{ item }}
 MTUBytes={{ iface.mtu | default(1500) }}
 
 {% set bonds = [] -%}
-{% for bond in ansible_interfaces|sort if ansible_facts[bond].type is defined and ansible_facts[bond].type == "bonding" -%}
+{% for bond in ansible_facts['interfaces']|sort if ansible_facts[bond].type is defined and ansible_facts[bond].type == "bonding" -%}
 {% if (ansible_facts[bond].slaves|length > 0) and item in ansible_facts[bond].slaves -%}{{ bonds.append(interface) -}}
 [Network]
 Bond={{ bond }}
@@ -23,7 +23,7 @@ Bond={{ bond }}
 KeepMaster=yes
 {% endif %}
 
-{% for vf in ansible_interfaces if vf.startswith((item|regex_replace('(.*)np[\d]$', '\\1')) + 'v') and ansible_facts[vf].module in system_network_sriov_vf %}
+{% for vf in ansible_facts['interfaces'] if vf.startswith((item|regex_replace('(.*)np[\d]$', '\\1')) + 'v') and ansible_facts[vf].module in system_network_sriov_vf %}
 [SR-IOV]
 VirtualFunction={{ loop.index - 1 }}
 MACSpoofCheck=no

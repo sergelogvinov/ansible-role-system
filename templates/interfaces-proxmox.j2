@@ -11,19 +11,19 @@
 auto lo
 iface lo inet loopback
 {% if system_network_local_dns %}
-        dns-nameservers 127.0.0.1 {{ ansible_default_ipv4['address'] }}{% for ns in system_network_dns -%}
-        {% if ('127.0.0.1' not in ns) and (ansible_default_ipv4['address'] not in ns) %} {{ ns }}{% endif %}{% endfor %}
+        dns-nameservers 127.0.0.1 {{ ansible_facts['default_ipv4']['address'] }}{% for ns in system_network_dns -%}
+        {% if ('127.0.0.1' not in ns) and (ansible_facts['default_ipv4']['address'] not in ns) %} {{ ns }}{% endif %}{% endfor %}
 {% elif system_network_dns != '' %}
         dns-nameservers {{ system_network_dns | join(' ') }}
 {% endif %}
-{% if system_network_search_dns and ansible_dns['search'] is defined and ansible_dns['search']|length > 0 %}
-        dns-search {{ ansible_dns['search'] | join(' ') }}
+{% if system_network_search_dns and ansible_facts['dns']['search'] is defined and ansible_facts['dns']['search']|length > 0 %}
+        dns-search {{ ansible_facts['dns']['search'] | join(' ') }}
 {% endif %}
 {% if system_network_ipv6 and system_network_ipv6['floatip'] is defined %}
         up ip -6 addr add {{ system_network_ipv6['floatip'] }} dev $IFACE
 {% endif %}
 
-{% for interface in ansible_interfaces|sort %}
+{% for interface in ansible_facts['interfaces']|sort %}
 {% set iface = ansible_facts[interface] %}
 {% if iface.type is defined and iface.type == "bonding" and (iface.slaves|length > 0) %}
 
@@ -52,8 +52,8 @@ iface {{ interface }} inet {{ 'static' if iface.ipv4 is defined else 'manual' }}
         {% endif -%}
         {% if iface.ipv4 is defined -%}
         address {{ iface.ipv4.address }}/{{ iface.ipv4.prefix }}
-        {% if ansible_default_ipv4.alias == interface -%}
-        gateway {{ ansible_default_ipv4.gateway }}
+        {% if ansible_facts['default_ipv4']['alias'] == interface -%}
+        gateway {{ ansible_facts['default_ipv4']['gateway'] }}
         {% endif -%}
         {% endif -%}
         mtu {{ iface.mtu | default(1500) }}
@@ -73,45 +73,45 @@ iface {{ interface }} inet6 static
 {% else %}
         address {{ iface.ipv6[0].address | ansible.utils.ipmath(0) }}/128
 {% endif %}
-{% if ansible_default_ipv6.address is defined and ansible_default_ipv6.address == iface.ipv6[0].address %}
-        gateway {{ ansible_default_ipv6['gateway'] }}
+{% if ansible_facts['default_ipv6']['address'] is defined and ansible_facts['default_ipv6']['address'] == iface.ipv6[0].address %}
+        gateway {{ ansible_facts['default_ipv6']['gateway'] }}
 {% endif %}
 {% endif %}
 {% endif %}
 {% endfor %}
 
-{% if ansible_default_ipv4.type is defined and ansible_default_ipv4.type != 'bonding' %}
-auto {{ 'eth0' if system_network_pin else ansible_default_ipv4['alias'] }}
-iface {{ 'eth0' if system_network_pin else ansible_default_ipv4['alias'] }} inet static
-        address {{ ansible_default_ipv4['address'] }}/{{ ansible_default_ipv4['prefix'] }}
-        gateway {{ ansible_default_ipv4['gateway'] }}
-{% if ansible_default_ipv4['mtu'] != 1500 %}
-        mtu {{ ansible_default_ipv4['mtu'] }}
+{% if ansible_facts['default_ipv4']['type'] is defined and ansible_facts['default_ipv4']['type'] != 'bonding' %}
+auto {{ 'eth0' if system_network_pin else ansible_facts['default_ipv4']['alias'] }}
+iface {{ 'eth0' if system_network_pin else ansible_facts['default_ipv4']['alias'] }} inet static
+        address {{ ansible_facts['default_ipv4']['address'] }}/{{ ansible_facts['default_ipv4']['prefix'] }}
+        gateway {{ ansible_facts['default_ipv4']['gateway'] }}
+{% if ansible_facts['default_ipv4']['mtu'] != 1500 %}
+        mtu {{ ansible_facts['default_ipv4']['mtu'] }}
 {% endif %}
 {% endif %}
-{% if system_network_pin and ansible_default_ipv4['alias'] != 'eth0' and ansible_default_ipv4['type'] == 'ether' %}
+{% if system_network_pin and ansible_facts['default_ipv4']['alias'] != 'eth0' and ansible_facts['default_ipv4']['type'] == 'ether' %}
 
 # temporary define interface
-allow-hotplug {{ ansible_default_ipv4['alias'] }}
-iface {{ ansible_default_ipv4['alias'] }} inet static
-        address {{ ansible_default_ipv4['address'] }}/{{ ansible_default_ipv4['prefix'] }}
-        gateway {{ ansible_default_ipv4['gateway'] }}
-{% if ansible_default_ipv4['mtu'] != 1500 %}
-        mtu {{ ansible_default_ipv4['mtu'] }}
+allow-hotplug {{ ansible_facts['default_ipv4']['alias'] }}
+iface {{ ansible_facts['default_ipv4']['alias'] }} inet static
+        address {{ ansible_facts['default_ipv4']['address'] }}/{{ ansible_facts['default_ipv4']['prefix'] }}
+        gateway {{ ansible_facts['default_ipv4']['gateway'] }}
+{% if ansible_facts['default_ipv4']['mtu'] != 1500 %}
+        mtu {{ ansible_facts['default_ipv4']['mtu'] }}
 {% endif %}
 
 {% endif %}
 {% if system_network_ipv6['address'] is defined %}
 
-iface {{ 'eth0' if system_network_pin else ansible_default_ipv4['alias'] }} inet6 static
+iface {{ 'eth0' if system_network_pin else ansible_facts['default_ipv4']['alias'] }} inet6 static
 {% if system_network_ipv6['address'].endswith('/64') %}
         address {{ system_network_ipv6['address'] | ansible.utils.ipmath('296') }}/128
 {% else %}
         address {{ system_network_ipv6['address'] | ansible.utils.ipmath(0) }}/128
 {% endif %}
-        gateway {{ system_network_ipv6['gateway']|default(ansible_default_ipv6['gateway']) }}
-{% if ansible_default_ipv4['mtu'] != 1500 %}
-        mtu {{ ansible_default_ipv4['mtu'] }}
+        gateway {{ system_network_ipv6['gateway']|default(ansible_facts['default_ipv6']['gateway']) }}
+{% if ansible_facts['default_ipv4']['mtu'] != 1500 %}
+        mtu {{ ansible_facts['default_ipv4']['mtu'] }}
 {% endif %}
 {% if system_network_ipv6['floatip'] is defined and system_network_ipv6['floatip'] %}
         up ip -6 neigh add proxy {{ system_network_ipv6['floatip'] }} dev $IFACE
@@ -144,7 +144,7 @@ iface vmbr0 inet6 static
 {% endif %}
 {% endif %}
 {% else %}
-{% for interface in ansible_interfaces|sort if ansible_facts[interface].type is defined and ansible_facts[interface].type == "bridge" %}
+{% for interface in ansible_facts['interfaces']|sort if ansible_facts[interface].type is defined and ansible_facts[interface].type == "bridge" %}
 {% set iface = ansible_facts[interface] %}
 auto {{ interface }}
 iface {{ interface }} {{ 'inet6' if iface.ipv6 is defined else 'inet' }} static

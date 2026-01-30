@@ -27,7 +27,7 @@ system_sshd_loglevel: INFO
 
 system_network: false
 system_network_pin: false
-system_network_dns: "{{ ansible_dns['nameservers']|default(['1.1.1.1','8.8.8.8']) }}"
+system_network_dns: "{{ ansible_facts['dns']['nameservers']|default(['1.1.1.1','8.8.8.8']) }}"
 system_network_sriov: ["i40e","mlx5_core"]
 system_network_sriov_vf: ["iavf"]
 

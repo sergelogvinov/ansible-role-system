@@ -2,7 +2,7 @@
 
 - name: adjust sysctl for all servers
   become: true
-  sysctl:
+  ansible.posix.sysctl:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
     sysctl_file: "{{ system_sysctl_file }}"
@@ -22,7 +22,7 @@
 
 - name: adjust sysctl
   become: true
-  sysctl:
+  ansible.posix.sysctl:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
     sysctl_file: "{{ system_sysctl_file }}"
@@ -45,14 +45,14 @@
     - { name: net.ipv4.tcp_max_tw_buckets,    value: 32768 }
     - { name: net.ipv4.ip_local_port_range,   value: "5000 65000" }
 
-  when: not (ansible_virtualization_role is defined and ansible_virtualization_role == "guest"
-             and ansible_virtualization_type == "lxc")
+  when: not (ansible_facts['virtualization_role'] is defined and ansible_facts['virtualization_role'] == "guest"
+             and ansible_facts['virtualization_type'] == "lxc")
   ignore_errors: true
   tags: ['system','sysctl']
 
 - name: adjust sysctl custom rules
   become: true
-  sysctl:
+  ansible.posix.sysctl:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
     sysctl_file: "{{ system_sysctl_file }}"

@@ -9,7 +9,7 @@
 
 - name: configure cpu governor
   become: true
-  when: not (ansible_virtualization_role is defined and ansible_virtualization_role != "host")
+  when: not (ansible_facts['virtualization_role'] is defined and ansible_facts['virtualization_role'] != "host")
   tags: ['system']
   block:
     - name: configure cpufrequtils

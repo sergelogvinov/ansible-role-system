@@ -28,7 +28,7 @@
   become: true
   apt:
     name: 'ntp'
-  when: ansible_os_family == "Debian" and ansible_service_mgr != 'systemd'
+  when: ansible_facts['os_family'] == "Debian" and ansible_facts['service_mgr'] != 'systemd'
   tags: ['system']
 
 - name: uninstall package
@@ -36,7 +36,7 @@
   apt:
     name: ['ntp','openntpd','ntpsec']
     state: absent
-  when: ansible_os_family == "Debian" and ansible_service_mgr == 'systemd'
+  when: ansible_facts['os_family'] == "Debian" and ansible_facts['service_mgr'] == 'systemd'
   tags: ['system']
 
 - name: replace default ntp config with custom one
@@ -44,16 +44,16 @@
   template:
     src: ntp.conf.j2
     dest: /etc/ntp.conf
-  when: ansible_os_family == "Debian" and ansible_service_mgr != 'systemd' and
-        not (ansible_virtualization_role == "guest" and ansible_virtualization_type == "lxc")
+  when: ansible_facts['os_family'] == "Debian" and ansible_facts['service_mgr'] != 'systemd' and
+        not (ansible_facts['virtualization_role'] == "guest" and ansible_facts['virtualization_type'] == "lxc")
   tags: ['system']
 
 - name: ntp stop in lxc-container or systems
   become: true
   service: name=ntp enabled=no state=stopped
-  when: (ansible_virtualization_role is defined and
-        ansible_virtualization_role == "guest" and ansible_virtualization_type == "lxc") or
-        ansible_service_mgr == 'systemd'
+  when: (ansible_facts['virtualization_role'] is defined and
+      ansible_facts['virtualization_role'] == "guest" and ansible_facts['virtualization_type'] == "lxc") or
+      ansible_facts['service_mgr'] == 'systemd'
   ignore_errors: true
   tags: ['system']
 
@@ -63,5 +63,5 @@
   template:
     src: timesyncd.conf.j2
     dest: /etc/systemd/timesyncd.conf
-  when: ansible_service_mgr == 'systemd'
+  when: ansible_facts['service_mgr'] == 'systemd'
   tags: ['system']

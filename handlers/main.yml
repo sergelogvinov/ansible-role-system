@@ -2,12 +2,12 @@
 
 - name: Update-grub
   shell: "{{ update_grub_cmd }}"
-  become: yes
+  become: true
 
 - name: Update-aliases
   shell: newaliases
-  become: yes
+  become: true
 
 - name: systemctl reload
   shell: systemctl daemon-reload
-  become: yes
+  become: true

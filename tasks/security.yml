@@ -27,7 +27,7 @@
     path: /etc/selinux/config
     regexp: '^SELINUX='
     line: 'SELINUX=disabled'
-  when: ansible_os_family == "RedHat" and not system_selinux
+  when: ansible_facts['os_family'] == "RedHat" and not system_selinux
   tags: ['system']
 
 # Systemd journal
@@ -36,5 +36,5 @@
   template:
     src: journald.conf.j2
     dest: /etc/systemd/journald.conf
-  when: ansible_service_mgr == 'systemd'
+  when: ansible_facts['service_mgr'] == 'systemd'
   tags: ['system']

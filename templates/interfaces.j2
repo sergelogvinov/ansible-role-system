@@ -7,47 +7,47 @@ iface lo inet loopback
 iface lo inet6 loopback
 
 # The primary network interface
-auto {{ 'eth0' if system_network_pin else ansible_default_ipv4['alias'] }}
-#iface {{ 'eth0' if system_network_pin else ansible_default_ipv4['alias'] }} inet dhcp
-iface {{ 'eth0' if system_network_pin else ansible_default_ipv4['alias'] }} inet static
-    address {{ ansible_default_ipv4['address'] }}
-    netmask {{ ansible_default_ipv4['netmask'] }}
-    gateway {{ ansible_default_ipv4['gateway'] }}
-{% if ansible_default_ipv4['mtu'] != 1500 %}
-    mtu {{ ansible_default_ipv4['mtu'] }}
+auto {{ 'eth0' if system_network_pin else ansible_facts['default_ipv4']['alias'] }}
+#iface {{ 'eth0' if system_network_pin else ansible_facts['default_ipv4']['alias'] }} inet dhcp
+iface {{ 'eth0' if system_network_pin else ansible_facts['default_ipv4']['alias'] }} inet static
+    address {{ ansible_facts['default_ipv4']['address'] }}
+    netmask {{ ansible_facts['default_ipv4']['netmask'] }}
+    gateway {{ ansible_facts['default_ipv4']['gateway'] }}
+{% if ansible_facts['default_ipv4']['mtu'] != 1500 %}
+    mtu {{ ansible_facts['default_ipv4']['mtu'] }}
 {% endif %}
 {% if system_network_local_dns %}
-    dns-nameservers 127.0.0.1 {{ ansible_default_ipv4['address'] }}{% for ns in system_network_dns -%}
-        {% if ('127.0.0.1' not in ns) and (ansible_default_ipv4['address'] not in ns) %} {{ ns }}{% endif %}{% endfor %}
+    dns-nameservers 127.0.0.1 {{ ansible_facts['default_ipv4']['address'] }}{% for ns in system_network_dns -%}
+        {% if ('127.0.0.1' not in ns) and (ansible_facts['default_ipv4']['address'] not in ns) %} {{ ns }}{% endif %}{% endfor %}
 {% elif system_network_dns != '' %}
     dns-nameservers{% for ns in system_network_dns %} {{ ns }}{% endfor %}
 
 {% endif %}
-{% if system_network_search_dns and ansible_dns['search'] is defined and ansible_dns['search']|length > 0 %}
-    dns-search{% for search in ansible_dns['search'] %} {{ search }}{% endfor %}
+{% if system_network_search_dns and ansible_facts['dns']['search'] is defined and ansible_facts['dns']['search']|length > 0 %}
+    dns-search{% for search in ansible_facts['dns']['search'] %} {{ search }}{% endfor %}
 {% endif %}
-{% if system_network_pin and ansible_default_ipv4['alias'] != 'eth0' %}
+{% if system_network_pin and ansible_facts['default_ipv4']['alias'] != 'eth0' %}
 
 # temporary define interface
-allow-hotplug {{ ansible_default_ipv4['alias'] }}
-iface {{ ansible_default_ipv4['alias'] }} inet static
-    address {{ ansible_default_ipv4['address'] }}
-    netmask {{ ansible_default_ipv4['netmask'] }}
-    gateway {{ ansible_default_ipv4['gateway'] }}
-{% if ansible_default_ipv4['mtu'] != 1500 %}
-    mtu {{ ansible_default_ipv4['mtu'] }}
+allow-hotplug {{ ansible_facts['default_ipv4']['alias'] }}
+iface {{ ansible_facts['default_ipv4']['alias'] }} inet static
+    address {{ ansible_facts['default_ipv4']['address'] }}
+    netmask {{ ansible_facts['default_ipv4']['netmask'] }}
+    gateway {{ ansible_facts['default_ipv4']['gateway'] }}
+{% if ansible_facts['default_ipv4']['mtu'] != 1500 %}
+    mtu {{ ansible_facts['default_ipv4']['mtu'] }}
 {% endif %}
 
 {% endif %}
-{% if ansible_default_ipv6 is defined and ansible_default_ipv6['interface'] is defined and ansible_default_ipv6['address'][:4] != 'fe80' %}
+{% if ansible_facts['default_ipv6'] is defined and ansible_facts['default_ipv6']['interface'] is defined and ansible_facts['default_ipv6']['address'][:4] != 'fe80' %}
 
-{{ 'auto '+ansible_default_ipv6['interface'] if ansible_default_ipv6['interface'] != ansible_default_ipv4['alias'] }}
-iface {{ ansible_default_ipv6['interface'] }} inet6 static
-    address {{ ansible_default_ipv6['address'] }}
-    netmask {{ '64' if ansible_default_ipv6['prefix'] == '128' else ansible_default_ipv6['prefix'] }}
-    gateway {{ ansible_default_ipv6['gateway'] }}
-{% if ansible_default_ipv6['mtu'] != 1500 %}
-    mtu {{ ansible_default_ipv6['mtu'] }}
+{{ 'auto '+ansible_facts['default_ipv6']['interface'] if ansible_facts['default_ipv6']['interface'] != ansible_facts['default_ipv4']['alias'] }}
+iface {{ ansible_facts['default_ipv6']['interface'] }} inet6 static
+    address {{ ansible_facts['default_ipv6']['address'] }}
+    netmask {{ '64' if ansible_facts['default_ipv6']['prefix'] == '128' else ansible_facts['default_ipv6']['prefix'] }}
+    gateway {{ ansible_facts['default_ipv6']['gateway'] }}
+{% if ansible_facts['default_ipv6']['mtu'] != 1500 %}
+    mtu {{ ansible_facts['default_ipv6']['mtu'] }}
 {% endif %}
 {% endif %}
 {% if system_network_dummy_ip %}
@@ -60,8 +60,8 @@ iface dummy0 inet static
     up /sbin/ip -6 addr add fd00::{{ system_network_dummy_ip | regex_replace('\.', ':') }} dev dummy0
 {% endif %}
 
-{% for interface in ansible_interfaces|sort %}
-{% if not interface in [ansible_default_ipv4['alias'],'docker0','cilium_host','lo','dummy0','dummy1','wg0','wg1'] %}
+{% for interface in ansible_facts['interfaces']|sort %}
+{% if not interface in [ansible_facts['default_ipv4']['alias'],'docker0','cilium_host','lo','dummy0','dummy1','wg0','wg1'] %}
 {% set params = ansible_facts[interface] %}
 {% if params.ipv4 is defined and (params['active'] | default(false) ) and params.ipv4['broadcast'] != 'link' %}{% if interface == "eth1" %}
 

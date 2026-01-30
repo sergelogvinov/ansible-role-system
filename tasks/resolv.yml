@@ -6,6 +6,6 @@
     dest: "{{ item.dest }}"
   when: item.when|bool
   with_items:
-    - { src: resolv.conf.j2,              dest: /etc/resolv.conf,                   when: "{{ ansible_os_family == 'Debian' }}" }
+    - { src: resolv.conf.j2,              dest: /etc/resolv.conf,                   when: "{{ ansible_facts['os_family'] == 'Debian' }}" }
     - { src: hosts.j2,                    dest: /etc/hosts,                         when: "{{ system_network_hosts | length > 0 }}" }
   tags: ['system','hosts']

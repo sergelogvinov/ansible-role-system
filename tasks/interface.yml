@@ -6,7 +6,7 @@
   when: item != 'ovs-system' and ansible_facts[item] is defined
     and ansible_facts[item].type == 'ether' and ansible_facts[item].pciid is defined
     and (ansible_facts[item].module|default('') in system_network_sriov)
-  with_items: "{{ ansible_interfaces }}"
+  with_items: "{{ ansible_facts['interfaces'] }}"
   register: probe
   tags: ['system','network','udev']
 
@@ -23,19 +23,19 @@
     src: interfaces-persistent-net-udev.j2
     dest: /etc/udev/rules.d/70-persistent-net.rules
   when: system_network_pin|bool
-  become: yes
+  become: true
   tags: ['system','network','udev']
 
 - name: replace network config
   template:
     src: "{{ system_network_interface }}"
     dest: /etc/network/interfaces
-  when: ansible_os_family == "Debian"
-  become: yes
+  when: ansible_facts['os_family'] == "Debian"
+  become: true
   tags: ['system','network']
 
 - name: Systemd-networkd
-  become: yes
+  become: true
   when: system_service_mgr == 'systemd'
   tags: ['system','network']
   block:
@@ -46,7 +46,7 @@
         owner: systemd-network
         mode: 0640
       when: item != 'ovs-system' and ansible_facts[item] is defined and ansible_facts[item].type == 'bonding'
-      with_items: "{{ ansible_interfaces }}"
+      with_items: "{{ ansible_facts['interfaces'] }}"
 
     - name: systemd-networkd bonding network
       template:
@@ -57,7 +57,7 @@
       when: item != 'ovs-system' and ansible_facts[item] is defined
         and ansible_facts[item].type == 'bonding' and ansible_facts[item].slaves|length > 0
         and not(ansible_facts[item].module|default('') in system_network_sriov)
-      with_items: "{{ ansible_interfaces }}"
+      with_items: "{{ ansible_facts['interfaces'] }}"
 
     - name: systemd-networkd sr-iov pf
       template:
@@ -68,7 +68,7 @@
       when: item != 'ovs-system' and ansible_facts[item] is defined
         and ansible_facts[item].type == 'ether' and (ansible_facts[item].module|default('') in system_network_sriov)
         and (system_network_sriov_pf[item]|default(false)) # ansible_facts[item].phc_index == 0
-      with_items: "{{ ansible_interfaces }}"
+      with_items: "{{ ansible_facts['interfaces'] }}"
 
     - name: Ensure folder exist
       file:
@@ -88,7 +88,7 @@
     #   template:
     #     src: interfaces-persistent-net.j2
     #     dest: /etc/systemd/network/10-persistent-net-eth0.link
-    #   when: system_network_pin and ansible_default_ipv4.type == 'ether'
+    #   when: system_network_pin and ansible_facts['default_ipv4']['type'] == 'ether'
 
     - name: enable systemd-networkd bonding network
       systemd:
@@ -102,8 +102,8 @@
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
-  when: ansible_os_family == "Debian" and system_network_dummy_ip and system_network_dummy_ip != ''
+  when: ansible_facts['os_family'] == "Debian" and system_network_dummy_ip and system_network_dummy_ip != ''
   with_items:
     - { src: dummy.conf.j2,       dest: /etc/modprobe.d/dummy.conf }
-  become: yes
+  become: true
   tags: ['system','network']
