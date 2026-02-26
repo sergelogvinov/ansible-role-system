@@ -13,7 +13,7 @@ MTUBytes={{ iface.mtu | default(1500) }}
 
 {% set bonds = [] -%}
 {% for bond in ansible_facts['interfaces']|sort if ansible_facts[bond].type is defined and ansible_facts[bond].type == "bonding" -%}
-{% if (ansible_facts[bond].slaves|length > 0) and item in ansible_facts[bond].slaves -%}{{ bonds.append(interface) -}}
+{% if (ansible_facts[bond].slaves|length > 0) and item in ansible_facts[bond].slaves -%}{{ bonds.append(item) -}}
 [Network]
 Bond={{ bond }}
 {% endif %}
