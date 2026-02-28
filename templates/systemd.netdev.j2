@@ -1,16 +1,34 @@
-{% set iface = ansible_facts[item] %}
+{%- if system_networkd is defined and system_networkd.bonds is defined and item in system_networkd.bonds -%}
+{% set config = system_networkd.bonds[item] -%}
+{% set iface = ansible_facts[item] -%}
 [NetDev]
 Name={{ item }}
-Description=LAG/Bond to a switch
 Kind=bond
-MTUBytes={{ iface.mtu | default(1500) }}
-MACAddress={{ iface.macaddress }}
+MTUBytes={{ config.mtu | default(iface.mtu | default(1500)) }}
+{% if config.macaddress is defined %}
+MACAddress={{ config.macaddress }}
+{% endif %}
 
 [Bond]
-Mode={{ iface.mode | default('802.3ad') }}
-MIIMonitorSec={{ [(iface.miimon|int), 100] | max | default(100) }}ms
-LACPTransmitRate={{ iface.lacp_rate | default(fast) }}
-TransmitHashPolicy={{ 'layer3+4' if iface.mode == "802.3ad" else 'layer2' }}
-UpDelaySec=2s
-DownDelaySec=2s
-MinLinks=1
+Mode={{ config.mode | default(iface.mode | default('802.3ad')) }}
+MIIMonitorSec={{ config.miimon | default(iface.miimon | default(100)) }}ms
+LACPTransmitRate={{ config.lacp_rate | default(iface.lacp_rate | default('fast')) }}
+TransmitHashPolicy={{ config.xmit_hash_policy | default('layer3+4' if config.mode|default(iface.mode|default('802.3ad')) == "802.3ad" else 'layer2') }}
+UpDelaySec={{ config.updelay | default(2) }}s
+DownDelaySec={{ config.downdelay | default(2) }}s
+MinLinks={{ config.min_links | default(1) }}
+{% if config.primary is defined %}
+PrimaryReselectPolicy={{ config.primary_reselect | default('always') }}
+{% endif %}
+
+{% elif system_networkd is defined and system_networkd.bridges is defined and item in system_networkd.bridges -%}
+{% set config = system_networkd.bridges[item] -%}
+{% set iface = ansible_facts[item] -%}
+[NetDev]
+Name={{ item }}
+Kind=bridge
+MTUBytes={{ config.mtu | default(iface.mtu | default(1500)) }}
+{% if config.macaddress is defined %}
+MACAddress={{ config.macaddress }}
+{% endif %}
+{% endif %}

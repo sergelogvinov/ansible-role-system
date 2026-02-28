@@ -1,0 +1,48 @@
+{% if system_networkd is defined and system_networkd.bonds is defined %}
+{% for name, config in system_networkd.bonds.items() %}
+{% if config.interfaces is defined and item in config.interfaces %}
+{% set iface = ansible_facts[item] %}
+[Match]
+Name={{ item }}
+Type=ether
+{% if iface.perm_macaddress is defined %}
+PermanentMACAddress={{ iface.perm_macaddress }}
+{% endif %}
+
+[Link]
+MTUBytes={{ config.mtu | default(iface.mtu | default(1500)) }}
+
+[Network]
+Bond={{ name }}
+{% endif %}
+{% endfor %}
+{% elif system_networkd is defined and system_networkd.bridges is defined %}
+{% for name, config in system_networkd.bridges.items() %}
+{% if config.interfaces is defined and item in config.interfaces %}
+{% set iface = ansible_facts[item] %}
+[Match]
+Name={{ item }}
+Type=ether
+
+[Network]
+Bridge={{ name }}
+{% endif %}
+{% endfor %}
+{% else %}
+{% set iface = ansible_facts[item] %}
+{% if iface.type == 'ether' and iface.master is defined %}
+# Fallback configuration using ansible_facts
+[Match]
+Name={{ item }}
+Type=ether
+{% if iface.perm_macaddress is defined %}
+PermanentMACAddress={{ iface.perm_macaddress }}
+{% endif %}
+
+[Link]
+MTUBytes={{ iface.mtu | default(1500) }}
+
+[Network]
+Bond={{ iface.master }}
+{% endif %}
+{% endif %}

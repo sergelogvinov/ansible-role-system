@@ -1,12 +1,138 @@
+{% if system_networkd is defined %}
+{% if system_networkd.bonds is defined and item in system_networkd.bonds -%}
+{% set config = system_networkd.bonds[item] -%}
+{% set iface = ansible_facts[item] -%}
+# Bond Master Configuration
+[Match]
+Name={{ item }}
+
+[Link]
+MTUBytes={{ config.mtu | default(iface.mtu | default(1500)) }}
+
+[Network]
+{% if config.dhcp | default(false) %}
+DHCP=yes
+{% else %}
+DHCP=no
+{% endif %}
+{% if config.addresses is defined %}{% for addr in config.addresses %}
+Address={{ addr }}
+{% endfor %}{% endif %}
+
+{% if config.addresses is defined %}{% for address in config.addresses %}
+{% set gateway = config.gateway4 if ':' not in address else (config.gateway6 | default('')) %}
+[Route]
+{% if gateway is defined and gateway != '' %}
+Gateway={{ gateway }}
+{% endif %}
+{% if address.split('/')[1] == '32' %}
+GatewayOnlink=true
+{% elif address.split('/')[1] == '128' and gateway[:4] != 'fe80' %}
+GatewayOnlink=true
+{% endif %}
+{% endfor %}{% endif %}
+
+{% elif system_networkd.bridges is defined and item in system_networkd.bridges -%}
+{% set config = system_networkd.bridges[item] -%}
+{% set iface = ansible_facts[item] -%}
+# Bridge Configuration
+[Match]
+Name={{ item }}
+
+[Link]
+MTUBytes={{ config.mtu | default(iface.mtu | default(1500)) }}
+
+[Network]
+{% if config.dhcp | default(false) %}
+DHCP=yes
+{% else %}
+DHCP=no
+{% endif %}
+{% if config.addresses is defined %}{% for addr in config.addresses %}
+Address={{ addr }}
+{% endfor %}{% endif %}
+ConfigureWithoutCarrier=true
+
+{% if config.addresses is defined %}{% for address in config.addresses %}
+{% set gateway = config.gateway4 if ':' not in address else (config.gateway6 | default('')) %}
+[Route]
+{% if gateway is defined and gateway != '' %}
+Gateway={{ gateway }}
+{% endif %}
+{% if address.split('/')[1] == '32' %}
+GatewayOnlink=true
+{% elif address.split('/')[1] == '128' and gateway[:4] != 'fe80' %}
+GatewayOnlink=true
+{% endif %}
+{% endfor %}{% endif %}
+
+{% elif system_networkd.interfaces is defined and item in system_networkd.interfaces %}
+{% set config = system_networkd.interfaces[item] %}
+# Physical Interface Configuration
+[Match]
+Name={{ item }}
+
+[Link]
+MTUBytes={{ config.mtu | default(1500) if item != 'lo' else 65536 }}
+
+[Network]
+{% if config.dhcp | default(false) %}
+DHCP=yes
+{% else %}
+DHCP=no
+{% endif %}
+{% if config.addresses is defined %}{% for addr in config.addresses %}
+Address={{ addr }}
+{% endfor %}{% endif %}
+{% if config.gateway4 is defined %}
+Gateway={{ config.gateway4 }}
+{% endif %}
+{% if config.gateway6 is defined %}
+Gateway={{ config.gateway6 }}
+{% endif %}
+{% if config.dns is defined %}{% for dns in config.dns %}
+DNS={{ dns }}
+{% endfor %}{% endif %}
+
+{% else %}
 {% set iface = ansible_facts[item] %}
+{% if iface.type == 'bonding' and iface.slaves|length > 0 %}
+# Bond Master Configuration (fallback to ansible_facts)
+[Match]
+Name={{ item }}
+
+[Link]
+MTUBytes={{ iface.mtu | default(1500) if item != 'lo' else 65536 }}
+
+[Network]
+DHCP=no
+{% endif %}
+
+{% if iface.type == 'ether' and iface.master is defined %}
+# Bond Slave Configuration
 [Match]
 Type=ether
-{% for slave in iface.slaves|sort %}
-PermanentMACAddress={{ ansible_facts[slave].perm_macaddress }}
-{% endfor %}
+PermanentMACAddress={{ iface.perm_macaddress }}
 
 [Link]
 MTUBytes={{ iface.mtu | default(1500) }}
 
 [Network]
-Bond={{ item }}
+Bond={{ iface.master }}
+    {% endif %}
+  {% endif %}
+{% else %}
+  {% set iface = ansible_facts[item] %}
+  {% if iface.type == 'ether' and iface.master is defined %}
+# Bond Slave Configuration (no system_networkd defined)
+[Match]
+Type=ether
+PermanentMACAddress={{ iface.perm_macaddress }}
+
+[Link]
+MTUBytes={{ iface.mtu | default(1500) }}
+
+[Network]
+Bond={{ iface.master }}
+{% endif %}
+{% endif %}

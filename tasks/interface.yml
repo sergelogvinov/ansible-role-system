@@ -19,24 +19,35 @@
   tags: ['system','network','udev']
 
 - name: pin network interface name (udev)
+  become: true
   template:
     src: interfaces-persistent-net-udev.j2
     dest: /etc/udev/rules.d/70-persistent-net.rules
   when: system_network_pin|bool
-  become: true
   tags: ['system','network','udev']
 
+- name: ensure folder exist
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  when: system_service_mgr == 'systemd'
+  with_items:
+    - /etc/systemd/network
+    - /etc/systemd/system/networking.service.d
+
 - name: replace network config
+  become: true
   template:
     src: "{{ system_network_interface }}"
     dest: /etc/network/interfaces
   when: ansible_facts['os_family'] == "Debian"
-  become: true
   tags: ['system','network']
 
 - name: Systemd-networkd
   become: true
-  when: system_service_mgr == 'systemd'
+  when: system_service_mgr == 'systemd' and system_networkd is defined
   tags: ['system','network']
   block:
     - name: systemd-networkd bonding netdev
@@ -45,7 +56,26 @@
         dest: /etc/systemd/network/25-{{ item }}.netdev
         owner: systemd-network
         mode: 0640
-      when: item != 'ovs-system' and ansible_facts[item] is defined and ansible_facts[item].type == 'bonding'
+      when: system_networkd is defined and system_networkd.bonds is defined and item in system_networkd.bonds
+      with_items: "{{ system_networkd.bonds.keys() | list }}"
+
+    - name: systemd-networkd bridges netdev
+      template:
+        src: systemd.netdev.j2
+        dest: /etc/systemd/network/25-{{ item }}.netdev
+        owner: systemd-network
+        mode: 0640
+      when: system_networkd is defined and system_networkd.bridges is defined and item in system_networkd.bridges
+      with_items: "{{ system_networkd.bridges.keys() | list }}"
+
+    - name: systemd-networkd bonding slave interfaces
+      template:
+        src: systemd.network-slave.j2
+        dest: /etc/systemd/network/20-{{ item }}.network
+        owner: systemd-network
+        mode: 0640
+      when: system_networkd is defined and (system_networkd.bonds is defined or system_networkd.bridges is defined)
+        and not item.startswith('tap') and not item.startswith('fw')
       with_items: "{{ ansible_facts['interfaces'] }}"
 
     - name: systemd-networkd bonding network
@@ -54,41 +84,70 @@
         dest: /etc/systemd/network/25-{{ item }}.network
         owner: systemd-network
         mode: 0640
-      when: item != 'ovs-system' and ansible_facts[item] is defined
-        and ansible_facts[item].type == 'bonding' and ansible_facts[item].slaves|length > 0
-        and not(ansible_facts[item].module|default('') in system_network_sriov)
-      with_items: "{{ ansible_facts['interfaces'] }}"
+      when: system_networkd is defined and system_networkd.bonds is defined
+      with_items: "{{ system_networkd.bonds.keys() | list }}"
 
-    - name: systemd-networkd sr-iov pf
+    - name: systemd-networkd bridges network
       template:
-        src: systemd.network-vf.j2
+        src: systemd.network.j2
         dest: /etc/systemd/network/30-{{ item }}.network
         owner: systemd-network
         mode: 0640
-      when: item != 'ovs-system' and ansible_facts[item] is defined
-        and ansible_facts[item].type == 'ether' and (ansible_facts[item].module|default('') in system_network_sriov)
-        and (system_network_sriov_pf[item]|default(false)) # ansible_facts[item].phc_index == 0
-      with_items: "{{ ansible_facts['interfaces'] }}"
+      when: system_networkd is defined and system_networkd.bridges is defined
+      with_items: "{{ system_networkd.bridges.keys() | list }}"
 
-    - name: Ensure folder exist
-      file:
-        path: "{{ item }}"
-        state: directory
-        mode: "0755"
-      with_items:
-        - /etc/systemd/network
-        - /etc/systemd/system/networking.service.d
-
-    - name: reduce timeout raise network
+    - name: systemd-networkd network
       template:
-        src: interfaces-timeout.conf.j2
-        dest: /etc/systemd/system/networking.service.d/interfaces-timeout.conf
+        src: systemd.network.j2
+        dest: /etc/systemd/network/25-{{ item }}.network
+        owner: systemd-network
+        mode: 0640
+      when: system_networkd is defined and system_networkd.interfaces is defined
+      with_items: "{{ system_networkd.interfaces.keys() | list }}"
+
+    # - name: systemd-networkd bonding netdev (fallback to ansible_facts)
+    #   template:
+    #     src: systemd.netdev.j2
+    #     dest: /etc/systemd/network/25-{{ item }}.netdev
+    #     owner: systemd-network
+    #     mode: 0640
+    #   when: item != 'ovs-system' and ansible_facts[item] is defined and ansible_facts[item].type == 'bonding'
+    #     and (system_networkd is not defined or system_networkd.bonds is not defined or item not in system_networkd.bonds.keys())
+    #   with_items: "{{ ansible_facts['interfaces'] }}"
+
+    # - name: systemd-networkd bonding network (fallback to ansible_facts)
+    #   template:
+    #     src: systemd.network.j2
+    #     dest: /etc/systemd/network/25-{{ item }}.network
+    #     owner: systemd-network
+    #     mode: 0640
+    #   when: item != 'ovs-system' and ansible_facts[item] is defined
+    #     and ansible_facts[item].type == 'bonding' and ansible_facts[item].slaves|length > 0
+    #     and not(ansible_facts[item].module|default('') in system_network_sriov)
+    #     and (system_networkd is not defined or system_networkd.bonds is not defined or item not in system_networkd.bonds.keys())
+    #   with_items: "{{ ansible_facts['interfaces'] }}"
+
+    # - name: systemd-networkd sr-iov pf
+    #   template:
+    #     src: systemd.network-vf.j2
+    #     dest: /etc/systemd/network/30-{{ item }}.network
+    #     owner: systemd-network
+    #     mode: 0640
+    #   when: item != 'ovs-system' and ansible_facts[item] is defined
+    #     and ansible_facts[item].type == 'ether' and (ansible_facts[item].module|default('') in system_network_sriov)
+    #     and (system_network_sriov_pf[item]|default(false)) # ansible_facts[item].phc_index == 0
+    #   with_items: "{{ ansible_facts['interfaces'] }}"
 
     # - name: pin network interface name
     #   template:
     #     src: interfaces-persistent-net.j2
     #     dest: /etc/systemd/network/10-persistent-net-eth0.link
     #   when: system_network_pin and ansible_facts['default_ipv4']['type'] == 'ether'
+
+    - name: reduce timeout raise network
+      template:
+        src: interfaces-timeout.conf.j2
+        dest: /etc/systemd/system/networking.service.d/interfaces-timeout.conf
 
     - name: enable systemd-networkd bonding network
       systemd:

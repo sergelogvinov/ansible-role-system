@@ -42,6 +42,34 @@ system_network_ipv4: ~
 #   ports: bond1
 #   address: 192.168.0.32/28
 
+system_networkd:
+  bonds:
+    # bond0:
+    #   interfaces: [ens3f0np0, enp129s0f0np0]
+    #   addresses:
+    #     - 192.168.14.2/24
+    #     - 2001:1::1/64
+    #   gateway4: 192.168.14.1
+    #   gateway6: 2001:1::2
+    #   mtu: 9000
+    # bond1:
+    #   interfaces: [ens4, ens5]
+    #   addresses:
+    #     - 10.0.1.10/24
+    #   gateway4: 10.0.1.1
+  bridges:
+    # vmbr0:
+    #   interfaces: [ens3f0np0, enp129s0f0np0]
+    #   addresses:
+    #     - 192.168.14.2/24
+    #     - 2001:1::1/64
+    #   mtu: 9000
+  interfaces:
+    # eth0:
+    #   addresses:
+    #     - 192.168.1.100/24
+    #   gateway4: 192.168.1.1
+
 system_network_local_dns: false
 system_network_search_dns: true
 system_network_custom_configs: true
