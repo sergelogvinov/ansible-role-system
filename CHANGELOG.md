@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.4.0](https://github.com/sergelogvinov/ansible-role-system/compare/v0.3.1...v0.4.0) (2026-03-02)
+
+
+### Features
+
+* networkd bonding, bridges ([f828c3a](https://github.com/sergelogvinov/ansible-role-system/commit/f828c3a1a1f0479e49fff610949a60da802e6e67))
+* update unattended blacklist ([df9aad3](https://github.com/sergelogvinov/ansible-role-system/commit/df9aad30c6e7467ce0bff66ecd1dd98b6fe032b5))
+
+
+### Bug Fixes
+
+* ansible deprecation warning ([3511ff4](https://github.com/sergelogvinov/ansible-role-system/commit/3511ff462dab7a2bcf91c44bf90a6071d4d68113))
+* default values ([b39b416](https://github.com/sergelogvinov/ansible-role-system/commit/b39b416462915974d9b4bca0638b9484c754eaf3))
+* interface ([ce9cf25](https://github.com/sergelogvinov/ansible-role-system/commit/ce9cf254afa5ffa6bfd91a25ab3f38f85039453a))
+
 ## [0.3.1](https://github.com/sergelogvinov/ansible-role-system/compare/v0.3.0...v0.3.1) (2025-11-01)
 
 
