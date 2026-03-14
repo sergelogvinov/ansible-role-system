@@ -24,18 +24,7 @@ iface {{ ansible_facts['default_ipv4']['alias'] }} inet static
         dns-search{% for search in ansible_facts['dns']['search'] %} {{ search }}{% endfor %}
 {% endif %}
 
-{% if ansible_facts['default_ipv4']['alias'].startswith('eth') %}
-# temporary define interface
-allow-hotplug {{ ansible_facts['default_ipv4']['alias'] }}
-iface {{ ansible_facts['default_ipv4']['alias'] }} inet static
-        address {{ ansible_facts['default_ipv4']['address'] }}/{{ ansible_facts['default_ipv4']['prefix'] }}
-        netmask {{ ansible_facts['default_ipv4']['netmask'] }}
-        gateway {{ ansible_facts['default_ipv4']['gateway'] }}
-        mtu {{ ansible_facts['default_ipv4']['mtu'] | default(1500) }}
-
-{% endif %}
 {% if ansible_facts['default_ipv6'] is defined and ansible_facts['default_ipv6']['interface'] is defined and ansible_facts['default_ipv6']['address'][:4] != 'fe80' %}
-
 {{ 'auto '+ansible_facts['default_ipv6']['interface'] if ansible_facts['default_ipv6']['interface'] != (ansible_facts['default_ipv4']['alias'] | default('')) }}
 iface {{ ansible_facts['default_ipv6']['interface'] }} inet6 static
         address {{ ansible_facts['default_ipv6']['address'] }}/{{ ansible_facts['default_ipv6']['prefix'] }}
