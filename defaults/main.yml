@@ -73,9 +73,6 @@ system_networkd:
 system_network_local_dns: false
 system_network_search_dns: true
 
-system_network_dummy_ip: ""
-system_network_dummy_mask: 255.255.255.255
-
 system_network_hosts_inventory_group: ~
 system_network_hosts: []
   # - { ip: 127.0.0.1, name: test }

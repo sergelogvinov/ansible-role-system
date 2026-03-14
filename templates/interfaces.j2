@@ -7,9 +7,9 @@ iface lo inet loopback
 iface lo inet6 loopback
 
 # The primary network interface
-auto {{ 'eth0' if system_network_pin else ansible_facts['default_ipv4']['alias'] }}
-#iface {{ 'eth0' if system_network_pin else ansible_facts['default_ipv4']['alias'] }} inet dhcp
-iface {{ 'eth0' if system_network_pin else ansible_facts['default_ipv4']['alias'] }} inet static
+auto {{ ansible_facts['default_ipv4']['alias'] }}
+#iface {{ ansible_facts['default_ipv4']['alias'] }} inet dhcp
+iface {{ ansible_facts['default_ipv4']['alias'] }} inet static
     address {{ ansible_facts['default_ipv4']['address'] }}
     netmask {{ ansible_facts['default_ipv4']['netmask'] }}
     gateway {{ ansible_facts['default_ipv4']['gateway'] }}
@@ -26,7 +26,7 @@ iface {{ 'eth0' if system_network_pin else ansible_facts['default_ipv4']['alias'
     dns-search{% for search in ansible_facts['dns']['search'] %} {{ search }}{% endfor %}
 {% endif %}
 
-{% if system_network_pin and ansible_facts['default_ipv4']['alias'] != 'eth0' %}
+{% if not ansible_facts['default_ipv4']['alias'].startswith('eth') %}
 # temporary define interface
 allow-hotplug {{ ansible_facts['default_ipv4']['alias'] }}
 iface {{ ansible_facts['default_ipv4']['alias'] }} inet static
@@ -40,7 +40,7 @@ iface {{ ansible_facts['default_ipv4']['alias'] }} inet static
 {% endif %}
 {% if ansible_facts['default_ipv6'] is defined and ansible_facts['default_ipv6']['interface'] is defined and ansible_facts['default_ipv6']['address'][:4] != 'fe80' %}
 
-{{ 'auto '+ansible_facts['default_ipv6']['interface'] if ansible_facts['default_ipv6']['interface'] != ansible_facts['default_ipv4']['alias'] }}
+{{ 'auto '+ansible_facts['default_ipv6']['interface'] if ansible_facts['default_ipv6']['interface'] != (ansible_facts['default_ipv4']['alias'] | default('')) }}
 iface {{ ansible_facts['default_ipv6']['interface'] }} inet6 static
     address {{ ansible_facts['default_ipv6']['address'] }}
     netmask {{ '64' if ansible_facts['default_ipv6']['prefix'] == '128' else ansible_facts['default_ipv6']['prefix'] }}
@@ -48,15 +48,6 @@ iface {{ ansible_facts['default_ipv6']['interface'] }} inet6 static
 {% if ansible_facts['default_ipv6']['mtu'] != 1500 %}
     mtu {{ ansible_facts['default_ipv6']['mtu'] }}
 {% endif %}
-{% endif %}
-{% if system_network_dummy_ip %}
-
-auto dummy0
-iface dummy0 inet static
-    address {{ system_network_dummy_ip }}
-    netmask {{ system_network_dummy_mask }}
-    pre-up /sbin/ip link add dummy0 type dummy ||:
-    up /sbin/ip -6 addr add fd00::{{ system_network_dummy_ip | regex_replace('\.', ':') }} dev dummy0
 {% endif %}
 
 {% for interface in ansible_facts['interfaces']|sort %}

@@ -156,13 +156,3 @@
       with_items:
         - { name: systemd-networkd, enabled: true }
         - { name: systemd-networkd-wait-online, enabled: false }
-
-- name: configure dummy interface
-  become: true
-  template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-  when: ansible_facts['os_family'] == "Debian" and system_network_dummy_ip != ""
-  with_items:
-    - { src: dummy.conf.j2,       dest: /etc/modprobe.d/dummy.conf }
-  tags: ['system','network']
