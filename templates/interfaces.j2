@@ -10,67 +10,59 @@ iface lo inet6 loopback
 auto {{ ansible_facts['default_ipv4']['alias'] }}
 #iface {{ ansible_facts['default_ipv4']['alias'] }} inet dhcp
 iface {{ ansible_facts['default_ipv4']['alias'] }} inet static
-    address {{ ansible_facts['default_ipv4']['address'] }}
-    netmask {{ ansible_facts['default_ipv4']['netmask'] }}
-    gateway {{ ansible_facts['default_ipv4']['gateway'] }}
-{% if ansible_facts['default_ipv4']['mtu'] != 1500 %}
-    mtu {{ ansible_facts['default_ipv4']['mtu'] }}
-{% endif %}
+        address {{ ansible_facts['default_ipv4']['address'] }}/{{ ansible_facts['default_ipv4']['prefix'] }}
+        netmask {{ ansible_facts['default_ipv4']['netmask'] }}
+        gateway {{ ansible_facts['default_ipv4']['gateway'] }}
+        mtu {{ ansible_facts['default_ipv4']['mtu'] | default(1500) }}
 {% if system_network_local_dns %}
-    dns-nameservers 127.0.0.1 {{ ansible_facts['default_ipv4']['address'] }}{% for ns in system_network_dns -%}
+        dns-nameservers 127.0.0.1 {{ ansible_facts['default_ipv4']['address'] }}{% for ns in system_network_dns -%}
         {% if ('127.0.0.1' not in ns) and (ansible_facts['default_ipv4']['address'] not in ns) %} {{ ns }}{% endif %}{% endfor %}
 {% elif system_network_dns != '' %}
-    dns-nameservers{% for ns in system_network_dns %} {{ ns }}{% endfor %}
+        dns-nameservers {{ system_network_dns | join(' ') }}
 {% endif %}
 {% if system_network_search_dns and ansible_facts['dns']['search'] is defined and ansible_facts['dns']['search']|length > 0 %}
-    dns-search{% for search in ansible_facts['dns']['search'] %} {{ search }}{% endfor %}
+        dns-search{% for search in ansible_facts['dns']['search'] %} {{ search }}{% endfor %}
 {% endif %}
 
-{% if not ansible_facts['default_ipv4']['alias'].startswith('eth') %}
+{% if ansible_facts['default_ipv4']['alias'].startswith('eth') %}
 # temporary define interface
 allow-hotplug {{ ansible_facts['default_ipv4']['alias'] }}
 iface {{ ansible_facts['default_ipv4']['alias'] }} inet static
-    address {{ ansible_facts['default_ipv4']['address'] }}
-    netmask {{ ansible_facts['default_ipv4']['netmask'] }}
-    gateway {{ ansible_facts['default_ipv4']['gateway'] }}
-{% if ansible_facts['default_ipv4']['mtu'] != 1500 %}
-    mtu {{ ansible_facts['default_ipv4']['mtu'] }}
-{% endif %}
+        address {{ ansible_facts['default_ipv4']['address'] }}/{{ ansible_facts['default_ipv4']['prefix'] }}
+        netmask {{ ansible_facts['default_ipv4']['netmask'] }}
+        gateway {{ ansible_facts['default_ipv4']['gateway'] }}
+        mtu {{ ansible_facts['default_ipv4']['mtu'] | default(1500) }}
 
 {% endif %}
 {% if ansible_facts['default_ipv6'] is defined and ansible_facts['default_ipv6']['interface'] is defined and ansible_facts['default_ipv6']['address'][:4] != 'fe80' %}
 
 {{ 'auto '+ansible_facts['default_ipv6']['interface'] if ansible_facts['default_ipv6']['interface'] != (ansible_facts['default_ipv4']['alias'] | default('')) }}
 iface {{ ansible_facts['default_ipv6']['interface'] }} inet6 static
-    address {{ ansible_facts['default_ipv6']['address'] }}
-    netmask {{ '64' if ansible_facts['default_ipv6']['prefix'] == '128' else ansible_facts['default_ipv6']['prefix'] }}
-    gateway {{ ansible_facts['default_ipv6']['gateway'] }}
-{% if ansible_facts['default_ipv6']['mtu'] != 1500 %}
-    mtu {{ ansible_facts['default_ipv6']['mtu'] }}
-{% endif %}
+        address {{ ansible_facts['default_ipv6']['address'] }}/{{ ansible_facts['default_ipv6']['prefix'] }}
+        netmask {{ '64' if ansible_facts['default_ipv6']['prefix'] == '128' else ansible_facts['default_ipv6']['prefix'] }}
+        gateway {{ ansible_facts['default_ipv6']['gateway'] }}
+        mtu {{ ansible_facts['default_ipv6']['mtu'] | default(1500) }}
 {% endif %}
 
 {% for interface in ansible_facts['interfaces']|sort %}
 {% if not interface in [ansible_facts['default_ipv4']['alias'],'docker0','cilium_host','lo','dummy0','dummy1','wg0','wg1'] %}
 {% set params = ansible_facts[interface] %}
-{% if params.ipv4 is defined and (params['active'] | default(false) ) and params.ipv4['broadcast'] != 'link' %}{% if interface == "eth1" %}
+{% if params.ipv4 is defined and params.ipv4['broadcast'] != 'link' %}{% if params['active'] | default(false) %}
 
 auto {{ interface }}
 iface {{ interface }} inet static
-    address {{ params.ipv4['address'] }}
-    netmask {{ params.ipv4['netmask'] }}
-    broadcast {{ params.ipv4['broadcast'] }}
-{% if params['mtu'] is defined and params['mtu'] != 1500 %}
-    mtu {{ params['mtu'] }}
-{% endif %}{% else %}
+        address {{ params.ipv4['address'] }}/{{ params.ipv4['prefix'] }}
+        netmask {{ params.ipv4['netmask'] }}
+{% if params.ipv4['broadcast'] != '' %}
+        broadcast {{ params.ipv4['broadcast'] }}
+{% endif %}
+        mtu {{ params['mtu'] | default(1500) }}
+{% else %}
 # auto {{ interface }}
 # iface {{ interface }} inet static
-#     address {{ params.ipv4['address'] }}
-#     netmask {{ params.ipv4['netmask'] }}
-#     broadcast {{ params.ipv4['broadcast'] }}
-{% if params['mtu'] is defined and params['mtu'] != 1500 %}
-#     mtu {{ params['mtu'] }}
-{% endif %}
+#       address {{ params.ipv4['address'] }}/{{ params.ipv4['prefix'] }}
+#       netmask {{ params.ipv4['netmask'] }}
+#       mtu {{ params['mtu'] | default(1500) }}
 {% endif %}{% endif %}
 {% endif %}
 {% endfor %}
