@@ -27,7 +27,7 @@ system_sshd_loglevel: INFO
 
 system_network: false
 system_network_pin: false
-system_network_dns: "{{ ansible_facts['dns']['nameservers']|default(['1.1.1.1','8.8.8.8']) }}"
+system_network_dns: "{{ ((ansible_facts['dns']['nameservers']|default(['1.1.1.1','8.8.8.8']))) |difference(['127.0.0.53'])|unique }}"
 system_network_sriov: ["i40e","mlx5_core"]
 system_network_sriov_vf: ["iavf"]
 
@@ -59,7 +59,7 @@ system_networkd:
     #   gateway4: 10.0.1.1
   bridges:
     # vmbr0:
-    #   interfaces: [ens3f0np0, enp129s0f0np0]
+    #   interfaces: [ens3f0np0]
     #   addresses:
     #     - 192.168.14.2/24
     #     - 2001:1::1/64

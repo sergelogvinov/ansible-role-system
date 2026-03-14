@@ -1,3 +1,4 @@
+{% set networkd_interfaces = system_networkd.interfaces if (system_networkd.interfaces.items() | default([]) | length > 0) else {} %}
 # This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
 
@@ -7,6 +8,7 @@ iface lo inet loopback
 iface lo inet6 loopback
 
 # The primary network interface
+{% if ansible_facts['default_ipv4']['alias']|default('') != "" and ansible_facts['default_ipv4']['alias'] not in networkd_interfaces %}
 auto {{ ansible_facts['default_ipv4']['alias'] }}
 #iface {{ ansible_facts['default_ipv4']['alias'] }} inet dhcp
 iface {{ ansible_facts['default_ipv4']['alias'] }} inet static
@@ -18,13 +20,15 @@ iface {{ ansible_facts['default_ipv4']['alias'] }} inet static
         dns-nameservers 127.0.0.1 {{ ansible_facts['default_ipv4']['address'] }}{% for ns in system_network_dns -%}
         {% if ('127.0.0.1' not in ns) and (ansible_facts['default_ipv4']['address'] not in ns) %} {{ ns }}{% endif %}{% endfor %}
 {% elif system_network_dns != '' %}
-        dns-nameservers {{ system_network_dns | join(' ') }}
+        dns-nameservers {{ system_network_dns|sort|join(' ') }}
 {% endif %}
 {% if system_network_search_dns and ansible_facts['dns']['search'] is defined and ansible_facts['dns']['search']|length > 0 %}
         dns-search{% for search in ansible_facts['dns']['search'] %} {{ search }}{% endfor %}
 {% endif %}
+{% endif %}
 
 {% if ansible_facts['default_ipv6'] is defined and ansible_facts['default_ipv6']['interface'] is defined and ansible_facts['default_ipv6']['address'][:4] != 'fe80' %}
+{% if not ansible_facts['default_ipv6']['interface'] in networkd_interfaces %}
 {{ 'auto '+ansible_facts['default_ipv6']['interface'] if ansible_facts['default_ipv6']['interface'] != (ansible_facts['default_ipv4']['alias'] | default('')) }}
 iface {{ ansible_facts['default_ipv6']['interface'] }} inet6 static
         address {{ ansible_facts['default_ipv6']['address'] }}/{{ ansible_facts['default_ipv6']['prefix'] }}
@@ -32,9 +36,10 @@ iface {{ ansible_facts['default_ipv6']['interface'] }} inet6 static
         gateway {{ ansible_facts['default_ipv6']['gateway'] }}
         mtu {{ ansible_facts['default_ipv6']['mtu'] | default(1500) }}
 {% endif %}
+{% endif %}
 
 {% for interface in ansible_facts['interfaces']|sort %}
-{% if not interface in [ansible_facts['default_ipv4']['alias'],'docker0','cilium_host','lo','dummy0','dummy1','wg0','wg1'] %}
+{% if not interface in [ansible_facts['default_ipv4']['alias']|default(''),'docker0','cilium_host','lo','dummy0','dummy1','wg0','wg1'] %}
 {% set params = ansible_facts[interface] %}
 {% if params.ipv4 is defined and params.ipv4['broadcast'] != 'link' %}{% if params['active'] | default(false) %}
 
