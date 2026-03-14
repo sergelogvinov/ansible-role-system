@@ -21,13 +21,12 @@ iface {{ 'eth0' if system_network_pin else ansible_facts['default_ipv4']['alias'
         {% if ('127.0.0.1' not in ns) and (ansible_facts['default_ipv4']['address'] not in ns) %} {{ ns }}{% endif %}{% endfor %}
 {% elif system_network_dns != '' %}
     dns-nameservers{% for ns in system_network_dns %} {{ ns }}{% endfor %}
-
 {% endif %}
 {% if system_network_search_dns and ansible_facts['dns']['search'] is defined and ansible_facts['dns']['search']|length > 0 %}
     dns-search{% for search in ansible_facts['dns']['search'] %} {{ search }}{% endfor %}
 {% endif %}
-{% if system_network_pin and ansible_facts['default_ipv4']['alias'] != 'eth0' %}
 
+{% if system_network_pin and ansible_facts['default_ipv4']['alias'] != 'eth0' %}
 # temporary define interface
 allow-hotplug {{ ansible_facts['default_ipv4']['alias'] }}
 iface {{ ansible_facts['default_ipv4']['alias'] }} inet static
@@ -85,7 +84,5 @@ iface {{ interface }} inet static
 {% endif %}
 {% endfor %}
 
-{% if system_network_custom_configs %}
 #
 source /etc/network/interfaces.d/*
-{% endif %}

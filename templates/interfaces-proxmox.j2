@@ -7,8 +7,11 @@
 # PVE will preserve these directives, but will NOT read its network
 # configuration from sourced files, so do not attempt to move any of
 # the PVE managed interfaces into external files!
+{% set networkd_interfaces = system_networkd.interfaces if (system_networkd.interfaces.items() | default([]) | length > 0) else {} %}
+{% set networkd_bonds = system_networkd.bonds if (system_networkd.bonds.items() | default([]) | length > 0) else {} %}
+{% set networkd_bridges = system_networkd.bridges if (system_networkd.bridges.items() | default([]) | length > 0) else {} %}
 
-{% if system_networkd.interfaces is defined and 'lo' in system_networkd.interfaces %}
+{% if (networkd_interfaces | length) > 0 and 'lo' in networkd_interfaces %}
 {% else %}
 auto lo
 iface lo inet loopback
@@ -84,7 +87,7 @@ iface {{ interface }} inet6 static
 {% endfor %}
 
 {% if ansible_facts['default_ipv4']['type'] is defined and ansible_facts['default_ipv4']['type'] != 'bonding' and
-        not (system_networkd.interfaces is defined and ansible_facts['default_ipv4']['alias'] in system_networkd.interfaces) %}
+        not (ansible_facts['default_ipv4']['alias'] in networkd_interfaces) %}
 auto {{ 'eth0' if system_network_pin else ansible_facts['default_ipv4']['alias'] }}
 iface {{ 'eth0' if system_network_pin else ansible_facts['default_ipv4']['alias'] }} inet static
         address {{ ansible_facts['default_ipv4']['address'] }}/{{ ansible_facts['default_ipv4']['prefix'] }}
@@ -94,7 +97,7 @@ iface {{ 'eth0' if system_network_pin else ansible_facts['default_ipv4']['alias'
 {% endif %}
 {% endif %}
 {% if system_network_pin and ansible_facts['default_ipv4']['alias'] != 'eth0' and ansible_facts['default_ipv4']['type'] == 'ether' and
-        not (system_networkd.interfaces is defined and ansible_facts['default_ipv4']['alias'] in system_networkd.interfaces) %}
+        not (ansible_facts['default_ipv4']['alias'] in networkd_interfaces) %}
 
 # temporary define interface
 allow-hotplug {{ ansible_facts['default_ipv4']['alias'] }}

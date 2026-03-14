@@ -71,27 +71,36 @@ GatewayOnlink=true
 # Physical Interface Configuration
 [Match]
 Name={{ item }}
+{% if ansible_facts[item].type == 'ether' %}
+Type=ether
+Kind=!*
+{% endif %}
 
 [Link]
 MTUBytes={{ config.mtu | default(1500) if item != 'lo' else 65536 }}
+{% if item != 'lo' %}
+ActivationPolicy=always-up
+{% endif %}
 
 [Network]
 {% if config.dhcp | default(false) %}
 DHCP=yes
-{% else %}
-DHCP=no
 {% endif %}
 {% if config.addresses is defined %}{% for addr in config.addresses %}
 Address={{ addr }}
 {% endfor %}{% endif %}
-{% if config.gateway4 is defined %}
-Gateway={{ config.gateway4 }}
+
+{% if config.addresses is defined and item != 'lo' %}{% for address in config.addresses %}
+{% set gateway = config.gateway4 if ':' not in address else (config.gateway6 | default('')) %}
+[Route]
+{% if gateway is defined and gateway != '' %}
+Gateway={{ gateway }}
 {% endif %}
-{% if config.gateway6 is defined %}
-Gateway={{ config.gateway6 }}
+{% if address.split('/')[1] == '32' %}
+GatewayOnlink=true
+{% elif address.split('/')[1] == '128' and gateway[:4] != 'fe80' %}
+GatewayOnlink=true
 {% endif %}
-{% if config.dns is defined %}{% for dns in config.dns %}
-DNS={{ dns }}
 {% endfor %}{% endif %}
 
 {% else %}

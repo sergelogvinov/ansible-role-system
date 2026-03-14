@@ -42,7 +42,7 @@
   template:
     src: "{{ system_network_interface }}"
     dest: /etc/network/interfaces
-  when: ansible_facts['os_family'] == "Debian"
+  when: ansible_facts['os_family'] == "Debian" and system_network_interface != ""
   tags: ['system','network']
 
 - name: Systemd-networkd
@@ -57,7 +57,7 @@
         owner: systemd-network
         mode: 0640
       when: system_networkd is defined and system_networkd.bonds is defined and item in system_networkd.bonds
-      with_items: "{{ system_networkd.bonds.keys() | list }}"
+      with_items: "{{ system_networkd.bonds.keys() | default([]) | list }}"
 
     - name: systemd-networkd bridges netdev
       template:
@@ -66,7 +66,7 @@
         owner: systemd-network
         mode: 0640
       when: system_networkd is defined and system_networkd.bridges is defined and item in system_networkd.bridges
-      with_items: "{{ system_networkd.bridges.keys() | list }}"
+      with_items: "{{ system_networkd.bridges.keys() | default([]) | list }}"
 
     - name: systemd-networkd bonding slave interfaces
       template:
@@ -74,8 +74,8 @@
         dest: /etc/systemd/network/20-{{ item }}.network
         owner: systemd-network
         mode: 0640
-      when: system_networkd is defined and (system_networkd.bonds is defined or system_networkd.bridges is defined)
-        and not item.startswith('tap') and not item.startswith('fw')
+      when: system_networkd is defined and ((system_networkd.bonds.items() | default([]) | length) > 0  or (system_networkd.bridges.items() | default([]) | length) >0)
+        and not (item.startswith('lo') or item.startswith('tap') or item.startswith('fw'))
       with_items: "{{ ansible_facts['interfaces'] }}"
 
     - name: systemd-networkd bonding network
@@ -85,7 +85,7 @@
         owner: systemd-network
         mode: 0640
       when: system_networkd is defined and system_networkd.bonds is defined
-      with_items: "{{ system_networkd.bonds.keys() | list }}"
+      with_items: "{{ system_networkd.bonds.keys() | default([]) | list }}"
 
     - name: systemd-networkd bridges network
       template:
@@ -94,7 +94,7 @@
         owner: systemd-network
         mode: 0640
       when: system_networkd is defined and system_networkd.bridges is defined
-      with_items: "{{ system_networkd.bridges.keys() | list }}"
+      with_items: "{{ system_networkd.bridges.keys() | default([]) | list }}"
 
     - name: systemd-networkd network
       template:
@@ -103,7 +103,7 @@
         owner: systemd-network
         mode: 0640
       when: system_networkd is defined and system_networkd.interfaces is defined
-      with_items: "{{ system_networkd.interfaces.keys() | list }}"
+      with_items: "{{ system_networkd.interfaces.keys() | default([]) | list }}"
 
     # - name: systemd-networkd bonding netdev (fallback to ansible_facts)
     #   template:
@@ -162,7 +162,7 @@
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
-  when: ansible_facts['os_family'] == "Debian" and system_network_dummy_ip is defined and system_network_dummy_ip != ""
+  when: ansible_facts['os_family'] == "Debian" and system_network_dummy_ip != ""
   with_items:
     - { src: dummy.conf.j2,       dest: /etc/modprobe.d/dummy.conf }
   tags: ['system','network']

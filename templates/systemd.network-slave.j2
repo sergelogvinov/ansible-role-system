@@ -1,4 +1,4 @@
-{% if system_networkd is defined and system_networkd.bonds is defined %}
+{% if system_networkd is defined and system_networkd.bonds is defined and (system_networkd.bonds.items() | default([]) | length) > 0 %}
 {% for name, config in system_networkd.bonds.items() %}
 {% if config.interfaces is defined and item in config.interfaces %}
 {% set iface = ansible_facts[item] %}
@@ -16,7 +16,7 @@ MTUBytes={{ config.mtu | default(iface.mtu | default(1500)) }}
 Bond={{ name }}
 {% endif %}
 {% endfor %}
-{% elif system_networkd is defined and system_networkd.bridges is defined %}
+{% elif system_networkd is defined and system_networkd.bridges is defined and (system_networkd.bridges.items() | default([]) | length) > 0 %}
 {% for name, config in system_networkd.bridges.items() %}
 {% if config.interfaces is defined and item in config.interfaces %}
 {% set iface = ansible_facts[item] %}

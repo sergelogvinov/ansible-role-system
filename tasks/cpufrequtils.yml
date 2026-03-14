@@ -1,6 +1,6 @@
 ---
 
-- name: package cpufrequtils
+- name: package cpufreq utils
   become: true
   apt:
     name: "{{ system_cpufrequtils }}"
@@ -13,7 +13,6 @@
   tags: ['system']
   block:
     - name: configure cpufrequtils
-      become: true
       template:
         src: cpufrequtils.j2
         dest: /etc/default/cpufrequtils

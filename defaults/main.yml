@@ -72,7 +72,6 @@ system_networkd:
 
 system_network_local_dns: false
 system_network_search_dns: true
-system_network_custom_configs: true
 
 system_network_dummy_ip: ""
 system_network_dummy_mask: 255.255.255.255
@@ -86,7 +85,7 @@ system_selinux: false
 system_postfix: false
 
 system_sysctl: []
-system_cpufrequtils_governor: ~ # performance
+system_cpufrequtils_governor: "" # performance
 
 # numastat -cm
 system_numa_hugepages: []
