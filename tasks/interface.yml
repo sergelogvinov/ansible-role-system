@@ -50,13 +50,22 @@
   when: system_service_mgr == 'systemd' and system_networkd is defined
   tags: ['system','network']
   block:
+    - name: systemd-networkd network
+      template:
+        src: systemd.network.j2
+        dest: /etc/systemd/network/20-{{ item }}.network
+        owner: systemd-network
+        mode: 0640
+      when: system_networkd.interfaces is defined and item in system_networkd.interfaces
+      with_items: "{{ system_networkd.interfaces | default({}) | dict2items | selectattr('value.vlan', 'undefined') | map(attribute='key') | list }}"
+
     - name: systemd-networkd bonding netdev
       template:
         src: systemd.netdev.j2
         dest: /etc/systemd/network/25-{{ item }}.netdev
         owner: systemd-network
         mode: 0640
-      when: system_networkd is defined and system_networkd.bonds is defined and item in system_networkd.bonds
+      when: system_networkd.bonds is defined and item in system_networkd.bonds
       with_items: "{{ system_networkd.bonds.keys() | default([]) | list }}"
 
     - name: systemd-networkd bridges netdev
@@ -65,26 +74,35 @@
         dest: /etc/systemd/network/25-{{ item }}.netdev
         owner: systemd-network
         mode: 0640
-      when: system_networkd is defined and system_networkd.bridges is defined and item in system_networkd.bridges
+      when: system_networkd.bridges is defined and item in system_networkd.bridges
       with_items: "{{ system_networkd.bridges.keys() | default([]) | list }}"
+
+    - name: systemd-networkd vlan netdev
+      template:
+        src: systemd.netdev.j2
+        dest: /etc/systemd/network/25-{{ item }}.netdev
+        owner: systemd-network
+        mode: 0640
+      when: system_networkd.interfaces is defined and item in system_networkd.interfaces
+      with_items: "{{ system_networkd.interfaces | default({}) | dict2items | selectattr('value.vlan', 'defined') | map(attribute='key') | list }}"
 
     - name: systemd-networkd bonding slave interfaces
       template:
         src: systemd.network-slave.j2
-        dest: /etc/systemd/network/20-{{ item }}.network
+        dest: /etc/systemd/network/25-{{ item }}.network
         owner: systemd-network
         mode: 0640
-      when: system_networkd is defined and ((system_networkd.bonds.items() | default([]) | length) > 0  or (system_networkd.bridges.items() | default([]) | length) >0)
+      when: ((system_networkd.bonds.items() | default([]) | length) > 0  or (system_networkd.bridges.items() | default([]) | length) >0)
         and not (item.startswith('lo') or item.startswith('tap') or item.startswith('fw'))
       with_items: "{{ ansible_facts['interfaces'] }}"
 
     - name: systemd-networkd bonding network
       template:
         src: systemd.network.j2
-        dest: /etc/systemd/network/25-{{ item }}.network
+        dest: /etc/systemd/network/30-{{ item }}.network
         owner: systemd-network
         mode: 0640
-      when: system_networkd is defined and system_networkd.bonds is defined
+      when: system_networkd.bonds is defined
       with_items: "{{ system_networkd.bonds.keys() | default([]) | list }}"
 
     - name: systemd-networkd bridges network
@@ -93,17 +111,17 @@
         dest: /etc/systemd/network/30-{{ item }}.network
         owner: systemd-network
         mode: 0640
-      when: system_networkd is defined and system_networkd.bridges is defined
+      when: system_networkd.bridges is defined
       with_items: "{{ system_networkd.bridges.keys() | default([]) | list }}"
 
-    - name: systemd-networkd network
+    - name: systemd-networkd network vlan
       template:
         src: systemd.network.j2
-        dest: /etc/systemd/network/25-{{ item }}.network
+        dest: /etc/systemd/network/35-{{ item }}.network
         owner: systemd-network
         mode: 0640
-      when: system_networkd is defined and system_networkd.interfaces is defined
-      with_items: "{{ system_networkd.interfaces.keys() | default([]) | list }}"
+      when: system_networkd.interfaces is defined and item in system_networkd.interfaces
+      with_items: "{{ system_networkd.interfaces | default({}) | dict2items | selectattr('value.vlan', 'defined') | map(attribute='key') | list }}"
 
     # - name: systemd-networkd bonding netdev (fallback to ansible_facts)
     #   template:

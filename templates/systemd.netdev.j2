@@ -31,4 +31,15 @@ MTUBytes={{ config.mtu | default(iface.mtu | default(1500)) }}
 {% if config.macaddress is defined %}
 MACAddress={{ config.macaddress }}
 {% endif %}
+{% elif system_networkd is defined and system_networkd.interfaces is defined and item in system_networkd.interfaces -%}
+{% set config = system_networkd.interfaces[item] -%}
+{% set iface = ansible_facts[item] -%}
+{% if config.vlan|default('') != "" -%}
+[NetDev]
+Name={{ item }}
+Kind=vlan
+
+[VLAN]
+Id={{ config.vlan }}
+{% endif %}
 {% endif %}

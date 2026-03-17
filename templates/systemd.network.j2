@@ -70,10 +70,19 @@ GatewayOnlink=true
 
 {% elif item in networkd_interfaces %}
 {% set config = networkd_interfaces[item] %}
+{% set iface = ansible_facts[item] -%}
 # Physical Interface Configuration
 [Match]
+{% if config.vlan|default('') != "" %}
 Name={{ item }}
-{% if ansible_facts[item].type|default('') == 'ether' %}
+{% elif item.startswith('eth') and iface.perm_macaddress is defined %}
+PermanentMACAddress={{ iface.perm_macaddress }}
+{% elif item.startswith('eth') and iface.macaddress is defined %}
+MACAddress={{ iface.macaddress }}
+{% else %}
+Name={{ item }}
+{% endif %}
+{% if iface.type|default('') == 'ether' and config.vlan|default('') == "" %}
 Type=ether
 Kind=!*
 {% endif %}
@@ -87,12 +96,21 @@ ActivationPolicy=always-up
 [Network]
 {% if config.dhcp | default(false) %}
 DHCP=yes
+{% else %}
+DHCP=no
 {% endif %}
-{% if config.addresses is defined %}{% for addr in config.addresses %}
+{% if config.addresses|default([]) | length > 0 %}{% for addr in config.addresses %}
 Address={{ addr }}
-{% endfor %}{% endif %}
+{% endfor %}
+{% else %}
+LinkLocalAddressing=no
+KeepConfiguration=yes
+{% endif %}
 {% for name, br in networkd_bridges.items() if item in br.interfaces %}
 Bridge={{ name }}
+{% endfor %}
+{% for name, iface in networkd_interfaces.items() if name.startswith(item+'.') %}
+VLAN={{ name }}
 {% endfor %}
 
 {% if config.addresses is defined and item != 'lo' %}{% for address in config.addresses %}
