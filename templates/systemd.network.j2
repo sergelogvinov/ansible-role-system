@@ -19,7 +19,7 @@ DHCP=yes
 {% if config.addresses is defined %}{% for addr in config.addresses %}
 Address={{ addr }}
 {% endfor %}{% endif %}
-{% for name, br in networkd_bridges.items() if item in br.interfaces %}
+{% for name, br in networkd_bridges.items() if item in (br.interfaces | default([])) %}
 Bridge={{ name }}
 {% endfor %}
 
@@ -106,24 +106,27 @@ Address={{ addr }}
 LinkLocalAddressing=no
 KeepConfiguration=yes
 {% endif %}
-{% for name, br in networkd_bridges.items() if item in br.interfaces %}
+{% for name, br in networkd_bridges.items() if item in (br.interfaces | default([])) %}
 Bridge={{ name }}
 {% endfor %}
 {% for name, iface in networkd_interfaces.items() if name.startswith(item+'.') %}
 VLAN={{ name }}
 {% endfor %}
 
-{% if config.addresses is defined and item != 'lo' %}{% for address in config.addresses %}
-{% set gateway = config.gateway4 if ':' not in address else (config.gateway6 | default('')) %}
+{% if config.addresses is defined and item != 'lo' %}
+{% if config.gateway4 is defined and config.gateway4 != '' %}
 [Route]
-{% if gateway is defined and gateway != '' %}
-Gateway={{ gateway }}
-{% endif %}
-{% if address.split('/')[1] == '32' %}
+Gateway={{ config.gateway4 }}
+{% for address in config.addresses if ':' not in address and not (config.gateway4 | ansible.utils.ipaddr(address)) %}
 GatewayOnlink=true
-{% elif address.split('/')[1] == '128' and gateway[:4] != 'fe80' %}
+{% endfor %}
+{% endif %}
+{% if config.gateway6 is defined and config.gateway6 != '' %}
+[Route]
+Gateway={{ config.gateway6 }}
+{% for address in config.addresses if ':' in address and (config.gateway6[:4] != 'fe80') and not (config.gateway6 | ansible.utils.ipaddr(address)) %}
 GatewayOnlink=true
+{% endfor %}
 {% endif %}
-{% endfor %}{% endif %}
 {% endif %}
-{% endif %}
+{% endif %}{% endif %}
