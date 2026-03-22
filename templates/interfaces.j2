@@ -40,14 +40,14 @@ iface {{ ansible_facts['default_ipv6']['interface'] }} inet6 static
 {% for interface in ansible_facts['interfaces']|sort if not (interface.startswith('lo') or interface.startswith('tap') or interface.startswith('fw') or interface in networkd_interfaces) %}
 {% if not interface in [ansible_facts['default_ipv4']['alias']|default(''),'docker0','cilium_host','lo','dummy0','dummy1','wg0','wg1'] %}
 {% set params = ansible_facts[interface] %}
-{% if params['active'] | default(false) %}
+{% if (params['active'] | default(false)) or (params['type'] == 'bridge') %}
 
 auto {{ interface }}
-iface {{ interface }} inet static
-{% if params.ipv4['address'] is defined and params.ipv4['address'] != '' %}
+iface {{ interface }} inet {{ 'static' if (params.ipv4 is defined or params.ipv6 is defined) else 'manual' }}
+{% if params.ipv4 is defined and params.ipv4['address'] is defined and params.ipv4['address'] != '' %}
         address {{ params.ipv4['address'] }}/{{ params.ipv4['prefix'] }}
         netmask {{ params.ipv4['netmask'] }}
-{% if params.ipv4['broadcast'] != '' %}
+{% if params.ipv4 is defined and params.ipv4['broadcast'] != '' %}
         broadcast {{ params.ipv4['broadcast'] }}
 {% endif %}
 {% endif %}
@@ -61,11 +61,9 @@ iface {{ interface }} inet static
         bridge-fd 0
 {% endif %}
 {% else %}
+
 # auto {{ interface }}
-# iface {{ interface }} inet static
-#       address {{ params.ipv4['address'] }}/{{ params.ipv4['prefix'] }}
-#       netmask {{ params.ipv4['netmask'] }}
-#       mtu {{ params['mtu'] | default(1500) }}
+# iface {{ interface }} inet {{ 'static' if (params.ipv4 is defined or params.ipv6 is defined) else 'manual' }}
 {% endif %}
 {% endif %}
 {% endfor %}
