@@ -1,0 +1,9 @@
+{
+    "yaml.format.enable": false,
+    "yaml.yamlVersion": "1.1",
+    "yaml.format.printWidth": 120,
+    "yaml.format.proseWrap": "never",
+    "[yaml]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+}

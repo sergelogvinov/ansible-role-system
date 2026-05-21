@@ -54,17 +54,33 @@ DHCP=yes
 Address={{ addr }}
 {% endfor %}{% endif %}
 ConfigureWithoutCarrier=true
-
 {% if config.addresses is defined %}{% for address in config.addresses %}
 {% set gateway = config.gateway4 if ':' not in address else (config.gateway6 | default('')) %}
-[Route]
 {% if gateway is defined and gateway != '' %}
+
+[Route]
 Gateway={{ gateway }}
 {% endif %}
 {% if address.split('/')[1] == '32' %}
 GatewayOnlink=true
 {% elif address.split('/')[1] == '128' and gateway[:4] != 'fe80' %}
 GatewayOnlink=true
+{% endif %}
+{% endfor %}{% endif %}
+{% if config.routes is defined %}
+{% for route in config.routes %}
+
+[Route]
+{% if route.to is defined and route.to != '' %}
+Destination={{ route.to }}
+{% endif %}
+{% if route.gateway is defined and route.gateway != '' %}
+Gateway={{ route.gateway }}
+{% else %}
+Scope=link
+{% endif %}
+{% if route.metric is defined and route.metric != '' %}
+Metric={{ route.metric }}
 {% endif %}
 {% endfor %}{% endif %}
 
@@ -128,5 +144,21 @@ Gateway={{ config.gateway6 }}
 GatewayOnlink=true
 {% endfor %}
 {% endif %}
+{% if config.routes is defined %}
+{% for route in config.routes %}
+
+[Route]
+{% if route.to is defined and route.to != '' %}
+Destination={{ route.to }}
+{% endif %}
+{% if route.gateway is defined and route.gateway != '' %}
+Gateway={{ route.gateway }}
+{% else %}
+Scope=link
+{% endif %}
+{% if route.metric is defined and route.metric != '' %}
+Metric={{ route.metric }}
+{% endif %}
+{% endfor %}{% endif %}
 {% endif %}
 {% endif %}{% endif %}
