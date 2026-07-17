@@ -58,10 +58,22 @@
   tags: ['system']
 
 # Use systemd
-- name: replace default ntp config with custom one
+- name: systemd-timesyncd
   become: true
-  template:
-    src: timesyncd.conf.j2
-    dest: /etc/systemd/timesyncd.conf
   when: system_service_mgr == 'systemd'
   tags: ['system']
+  block:
+    - name: replace default ntp config with custom one
+      become: true
+      template:
+        src: timesyncd.conf.j2
+        dest: /etc/systemd/timesyncd.conf
+      when: system_service_mgr == 'systemd'
+      tags: ['system']
+
+    - name: enable systemd-timesyncd
+      systemd:
+        name: "{{ item.name }}"
+        enabled: "{{ item.enabled }}"
+      with_items:
+        - { name: systemd-timesyncd, enabled: true }
